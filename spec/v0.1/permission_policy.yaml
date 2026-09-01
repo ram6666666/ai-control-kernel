@@ -1,6 +1,8 @@
 schema_version: ack.permission_policy.v0.1
 policy_id: core-operation-permissions
 status: DESIGN_SPEC
+predicate_registry: spec/v0.1/predicate_registry.yaml
+condition_registry: spec/v0.1/condition_detectors.yaml
 
 results:
   allow: ALLOW
@@ -8,233 +10,85 @@ results:
   review: SEMANTIC_REVIEW_REQUIRED
   noop: NOOP_IDEMPOTENT
 
-operation_defaults:
-  READ_DIAGNOSE:
-    green: ALLOW
-    amber: ALLOW
-    red: RECOVERY_SCOPE_ONLY
-  DISCUSS_PLAN:
-    green: ALLOW
-    amber: ALLOW
-    red: NO_AUTHORITY_EFFECT_ONLY
-  SHADOW_VALIDATE:
-    green: ALLOW
-    amber: ALLOW_WITH_WARNINGS
-    red: DIAGNOSTIC_ONLY
-  WRITE_DIAGNOSTIC_EVIDENCE:
-    green: ALLOW
-    amber: ALLOW
-    red: RECOVERY_ROLE_ONLY
-  PRODUCE_NONCANONICAL_WORKING_ARTIFACT:
-    green: ALLOW
-    amber: EVALUATE_CONDITIONS
-    red: DENY
-  CLAIM_EXECUTION_UNIT:
-    green: ALLOW
-    amber: EVALUATE_CONDITIONS
-    red: DENY
-  EXECUTE_AND_CHECKPOINT:
-    green: ALLOW
-    amber: EVALUATE_CONDITIONS
-    red: DENY
-  PUBLISH_AUTHORITATIVE_ARTIFACT:
-    green: ALLOW
-    amber: EVALUATE_CONDITIONS
-    red: DENY
-  ISSUE_INDEPENDENT_AUDIT_VERDICT:
-    green: ALLOW
-    amber: EVALUATE_CONDITIONS
-    red: DENY
-  MUTATE_CONTROL_STATE:
-    green: ALLOW
-    amber: EVALUATE_CONDITIONS
-    red: DENY
-  PROMOTE_OR_ACCEPT_CANONICAL:
-    green: ALLOW
-    amber: EVALUATE_CONDITIONS
-    red: DENY
-  LIVENESS_REPAIR:
-    green: REQUIRE_ROLE_AND_PREDICATES
-    amber: REQUIRE_ROLE_AND_PREDICATES
-    red: REQUIRE_ROLE_AND_PREDICATES
-  POLICY_RECONCILIATION:
-    green: NOOP_OR_VALIDATE
-    amber: REQUIRE_ROLE_AND_PREDICATES
-    red: REQUIRE_ROLE_AND_PREDICATES
+outcome_semantics:
+  ALLOW: {result: ALLOW}
+  DENY: {result: DENY}
+  ALLOW_WITH_WARNINGS: {result: ALLOW, warnings_required: true}
+  RECOVERY_SCOPE_ONLY: {result: ALLOW_IF_OPERATION_LISTED_AS_RECOVERY}
+  NO_AUTHORITY_EFFECT_ONLY: {result: ALLOW_ONLY_WITHOUT_AUTHORITY_EFFECT}
+  DIAGNOSTIC_ONLY: {result: ALLOW_ONLY_SHADOW_OR_DIAGNOSTIC}
+  RECOVERY_ROLE_ONLY: {result: ALLOW_IF_PREDICATES, require_predicates: [P_RECOVERY_ROLE_VALID, P_RECOVERY_NO_CONTENT_ADVANCE]}
+  EVALUATE_CONDITIONS: {result: APPLY_CONDITION_RULES_ELSE_DENY}
+  REQUIRE_ROLE_AND_PREDICATES: {result: APPLY_CONDITION_RULES_WITH_ROLE_ELSE_DENY}
+  NOOP_OR_VALIDATE: {result: NOOP_IF_NO_MUTATION_ELSE_APPLY_CONDITION_RULES}
+  ALLOW_IF_PREDICATES: {result: ALLOW_IF_ALL_DECLARED_PREDICATES_PASS}
+  DENY_UNLESS_EXPLICITLY_IRRELEVANT: {result: ALLOW_IF_PREDICATES, require_predicates: [P_PROMOTION_AMBER_IRRELEVANT]}
 
-predicates:
-  authority_unique: effective_state.health.authority_resolution == UNIQUE
-  required_integrity_not_false: no_required_integrity_status_in [MISMATCH, UNVERIFIED]
-  writer_owner_valid: actor_writer_owner_check == PASS
-  source_revision_current: source_revision_check == PASS
-  no_permission_widening: permission_intersection_check == PASS
-  required_gates_present: required_gate_check == PASS
-  no_claim_conflict: claim_conflict_check == PASS
-  recovery_does_not_advance_content: requested_mutations.content_state_advancement == false
-  recovery_targets_detected_defect: requested_repair.condition_code in observed_condition_codes
-  shadow_does_not_treat_untrusted_as_valid: shadow_input_trust_check == PASS
-  noncanonical_output_explicit: requested_output.authority_class == NONCANONICAL
-  audit_input_exact_if_required: audit_input_integrity_check == PASS
-  promotion_relevant_conditions_empty: promotion_relevant_amber_conditions == []
+operation_defaults:
+  READ_DIAGNOSE: {green: ALLOW, amber: ALLOW, red: RECOVERY_SCOPE_ONLY}
+  DISCUSS_PLAN: {green: ALLOW, amber: ALLOW, red: NO_AUTHORITY_EFFECT_ONLY}
+  SHADOW_VALIDATE: {green: ALLOW, amber: ALLOW_WITH_WARNINGS, red: DIAGNOSTIC_ONLY}
+  WRITE_DIAGNOSTIC_EVIDENCE: {green: ALLOW, amber: ALLOW, red: RECOVERY_ROLE_ONLY}
+  PRODUCE_NONCANONICAL_WORKING_ARTIFACT: {green: ALLOW, amber: EVALUATE_CONDITIONS, red: DENY}
+  CLAIM_EXECUTION_UNIT: {green: ALLOW, amber: EVALUATE_CONDITIONS, red: DENY}
+  EXECUTE_AND_CHECKPOINT: {green: ALLOW, amber: EVALUATE_CONDITIONS, red: DENY}
+  PUBLISH_AUTHORITATIVE_ARTIFACT: {green: ALLOW, amber: EVALUATE_CONDITIONS, red: DENY}
+  ISSUE_INDEPENDENT_AUDIT_VERDICT: {green: ALLOW, amber: EVALUATE_CONDITIONS, red: DENY}
+  MUTATE_CONTROL_STATE: {green: ALLOW, amber: EVALUATE_CONDITIONS, red: DENY}
+  PROMOTE_OR_ACCEPT_CANONICAL: {green: ALLOW, amber: EVALUATE_CONDITIONS, red: DENY}
+  LIVENESS_REPAIR: {green: REQUIRE_ROLE_AND_PREDICATES, amber: REQUIRE_ROLE_AND_PREDICATES, red: REQUIRE_ROLE_AND_PREDICATES}
+  POLICY_RECONCILIATION: {green: NOOP_OR_VALIDATE, amber: REQUIRE_ROLE_AND_PREDICATES, red: REQUIRE_ROLE_AND_PREDICATES}
 
 condition_rules:
   A_STALE_DERIVED_VIEW:
     default_risk: AMBER
-    allow_operations:
-      - READ_DIAGNOSE
-      - DISCUSS_PLAN
-      - SHADOW_VALIDATE
-      - WRITE_DIAGNOSTIC_EVIDENCE
-      - PRODUCE_NONCANONICAL_WORKING_ARTIFACT
-      - CLAIM_EXECUTION_UNIT
-      - EXECUTE_AND_CHECKPOINT
-      - PUBLISH_AUTHORITATIVE_ARTIFACT
-      - ISSUE_INDEPENDENT_AUDIT_VERDICT
-      - MUTATE_CONTROL_STATE
-    deny_operations: []
-    require_predicates:
-      - authority_unique
-      - source_revision_current
-    canonical_promotion:
-      result: ALLOW_IF_PREDICATES
-      require_predicates:
-        - promotion_relevant_conditions_empty
+    allow_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE, WRITE_DIAGNOSTIC_EVIDENCE, PRODUCE_NONCANONICAL_WORKING_ARTIFACT, CLAIM_EXECUTION_UNIT, EXECUTE_AND_CHECKPOINT, PUBLISH_AUTHORITATIVE_ARTIFACT, ISSUE_INDEPENDENT_AUDIT_VERDICT, MUTATE_CONTROL_STATE]
+    require_predicates: [P_AUTHORITY_UNIQUE, P_SOURCE_REVISION_CURRENT]
+    canonical_promotion: {result: ALLOW_IF_PREDICATES, require_predicates: [P_PROMOTION_AMBER_IRRELEVANT]}
   A_STALE_COPIED_METADATA:
     default_risk: AMBER
-    allow_operations:
-      - READ_DIAGNOSE
-      - DISCUSS_PLAN
-      - SHADOW_VALIDATE
-      - WRITE_DIAGNOSTIC_EVIDENCE
-      - PRODUCE_NONCANONICAL_WORKING_ARTIFACT
-      - CLAIM_EXECUTION_UNIT
-      - EXECUTE_AND_CHECKPOINT
-      - PUBLISH_AUTHORITATIVE_ARTIFACT
-      - ISSUE_INDEPENDENT_AUDIT_VERDICT
-      - MUTATE_CONTROL_STATE
-    require_predicates:
-      - authority_unique
-      - required_integrity_not_false
-      - no_permission_widening
-    canonical_promotion:
-      result: ALLOW_IF_PREDICATES
-      require_predicates:
-        - promotion_relevant_conditions_empty
+    allow_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE, WRITE_DIAGNOSTIC_EVIDENCE, PRODUCE_NONCANONICAL_WORKING_ARTIFACT, CLAIM_EXECUTION_UNIT, EXECUTE_AND_CHECKPOINT, PUBLISH_AUTHORITATIVE_ARTIFACT, ISSUE_INDEPENDENT_AUDIT_VERDICT, MUTATE_CONTROL_STATE]
+    require_predicates: [P_AUTHORITY_UNIQUE, P_REQUIRED_INTEGRITY_VERIFIED_OR_NA, P_NO_PERMISSION_WIDENING]
+    canonical_promotion: {result: ALLOW_IF_PREDICATES, require_predicates: [P_PROMOTION_AMBER_IRRELEVANT]}
   A_OPTIONAL_TELEMETRY_MISSING:
     default_risk: AMBER
-    allow_operations:
-      - READ_DIAGNOSE
-      - DISCUSS_PLAN
-      - SHADOW_VALIDATE
-      - PRODUCE_NONCANONICAL_WORKING_ARTIFACT
-      - CLAIM_EXECUTION_UNIT
-      - EXECUTE_AND_CHECKPOINT
-    require_predicates:
-      - authority_unique
-      - required_integrity_not_false
-    canonical_promotion:
-      result: DENY_UNLESS_EXPLICITLY_IRRELEVANT
+    allow_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE, PRODUCE_NONCANONICAL_WORKING_ARTIFACT, CLAIM_EXECUTION_UNIT, EXECUTE_AND_CHECKPOINT]
+    require_predicates: [P_AUTHORITY_UNIQUE, P_REQUIRED_INTEGRITY_VERIFIED_OR_NA]
+    canonical_promotion: {result: DENY_UNLESS_EXPLICITLY_IRRELEVANT, require_predicates: [P_PROMOTION_AMBER_IRRELEVANT]}
   A_SCHEDULER_DEGRADED_NO_SIDE_EFFECT:
     default_risk: AMBER
-    allow_operations:
-      - READ_DIAGNOSE
-      - DISCUSS_PLAN
-      - SHADOW_VALIDATE
-      - WRITE_DIAGNOSTIC_EVIDENCE
+    allow_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE, WRITE_DIAGNOSTIC_EVIDENCE]
     conditional_operations:
-      EXECUTE_AND_CHECKPOINT:
-        result: ALLOW_IF_PREDICATES
-        require_predicates:
-          - authority_unique
-          - required_integrity_not_false
-          - no_claim_conflict
-          - source_revision_current
-      LIVENESS_REPAIR:
-        result: ALLOW_IF_PREDICATES
-        require_predicates:
-          - writer_owner_valid
-          - recovery_does_not_advance_content
-          - recovery_targets_detected_defect
-    canonical_promotion:
-      result: DENY_UNLESS_EXPLICITLY_IRRELEVANT
+      EXECUTE_AND_CHECKPOINT: {result: ALLOW_IF_PREDICATES, require_predicates: [P_AUTHORITY_UNIQUE, P_REQUIRED_INTEGRITY_VERIFIED_OR_NA, P_NO_CLAIM_CONFLICT, P_SOURCE_REVISION_CURRENT]}
+      LIVENESS_REPAIR: {result: ALLOW_IF_PREDICATES, require_predicates: [P_WRITER_OWNER_VALID, P_RECOVERY_NO_CONTENT_ADVANCE, P_RECOVERY_TARGETS_OBSERVED_DEFECT]}
+    canonical_promotion: {result: DENY_UNLESS_EXPLICITLY_IRRELEVANT, require_predicates: [P_PROMOTION_AMBER_IRRELEVANT]}
   A_HISTORICAL_POLICY_TEXT_PRESENT:
     default_risk: AMBER
-    allow_operations:
-      - READ_DIAGNOSE
-      - DISCUSS_PLAN
-      - SHADOW_VALIDATE
+    allow_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE]
     conditional_operations:
-      EXECUTE_AND_CHECKPOINT:
-        result: ALLOW_IF_PREDICATES
-        require_predicates:
-          - authority_unique
-          - required_integrity_not_false
-          - no_permission_widening
-    canonical_promotion:
-      result: DENY_UNLESS_EXPLICITLY_IRRELEVANT
+      EXECUTE_AND_CHECKPOINT: {result: ALLOW_IF_PREDICATES, require_predicates: [P_AUTHORITY_UNIQUE, P_REQUIRED_INTEGRITY_VERIFIED_OR_NA, P_NO_PERMISSION_WIDENING]}
+    canonical_promotion: {result: DENY_UNLESS_EXPLICITLY_IRRELEVANT, require_predicates: [P_PROMOTION_AMBER_IRRELEVANT]}
   A_NONCRITICAL_REFERENCE_UNAVAILABLE:
     default_risk: AMBER
-    allow_operations:
-      - READ_DIAGNOSE
-      - DISCUSS_PLAN
-      - SHADOW_VALIDATE
-      - PRODUCE_NONCANONICAL_WORKING_ARTIFACT
+    allow_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE, PRODUCE_NONCANONICAL_WORKING_ARTIFACT]
     conditional_operations:
-      EXECUTE_AND_CHECKPOINT:
-        result: ALLOW_IF_PREDICATES
-        require_predicates:
-          - authority_unique
-          - required_integrity_not_false
-    canonical_promotion:
-      result: DENY_UNLESS_EXPLICITLY_IRRELEVANT
+      EXECUTE_AND_CHECKPOINT: {result: ALLOW_IF_PREDICATES, require_predicates: [P_AUTHORITY_UNIQUE, P_REQUIRED_INTEGRITY_VERIFIED_OR_NA]}
+    canonical_promotion: {result: DENY_UNLESS_EXPLICITLY_IRRELEVANT, require_predicates: [P_PROMOTION_AMBER_IRRELEVANT]}
 
-  R_AUTHORITY_CONFLICT:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE, WRITE_DIAGNOSTIC_EVIDENCE]
-  R_POLICY_INCOMPATIBLE:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, POLICY_RECONCILIATION]
-  R_POLICY_FINGERPRINT_MISMATCH:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, POLICY_RECONCILIATION]
-  R_ARTIFACT_IDENTITY_MISMATCH:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, WRITE_DIAGNOSTIC_EVIDENCE]
-  R_REQUIRED_ARTIFACT_UNAVAILABLE:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, WRITE_DIAGNOSTIC_EVIDENCE]
-  R_CLAIM_CONFLICT:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, WRITE_DIAGNOSTIC_EVIDENCE, LIVENESS_REPAIR]
-  R_STALE_EXPECTED_REVISION:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE]
-  R_ILLEGAL_TRANSITION:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE]
-  R_MISSING_AUTHORIZATION:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN]
-  R_ROLE_WRITE_VIOLATION:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN]
-  R_REQUIRED_GATE_MISSING:
-    default_risk: RED
-    deny_ordinary_execution: true
-    recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE]
+  R_AUTHORITY_CONFLICT: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE, WRITE_DIAGNOSTIC_EVIDENCE]}
+  R_POLICY_INCOMPATIBLE: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, POLICY_RECONCILIATION]}
+  R_POLICY_FINGERPRINT_MISMATCH: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, POLICY_RECONCILIATION]}
+  R_ARTIFACT_IDENTITY_MISMATCH: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, WRITE_DIAGNOSTIC_EVIDENCE]}
+  R_REQUIRED_ARTIFACT_UNAVAILABLE: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, WRITE_DIAGNOSTIC_EVIDENCE]}
+  R_CLAIM_CONFLICT: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, WRITE_DIAGNOSTIC_EVIDENCE, LIVENESS_REPAIR]}
+  R_STALE_EXPECTED_REVISION: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE]}
+  R_ILLEGAL_TRANSITION: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE]}
+  R_MISSING_AUTHORIZATION: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN]}
+  R_ROLE_WRITE_VIOLATION: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN]}
+  R_REQUIRED_GATE_MISSING: {default_risk: RED, deny_ordinary_execution: true, recovery_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE]}
 
 semantic_review:
-  code: S_SEMANTIC_AMBIGUITY
+  codes: [S_AUTHORITY_MEANING_AMBIGUOUS, S_SCOPE_CHANGE_AMBIGUOUS, S_REQUIREMENT_CONFLICT, S_ACCEPTANCE_JUDGMENT_REQUIRED]
   result: SEMANTIC_REVIEW_REQUIRED
   ordinary_authority_effect_allowed: false
   allowed_operations_without_authority_effect: [READ_DIAGNOSE, DISCUSS_PLAN]
