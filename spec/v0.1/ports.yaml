@@ -1,0 +1,122 @@
+schema_version: ack.ports.v0.1
+status: DESIGN_SPEC
+core_provider_sdk_imports_forbidden: true
+
+ports:
+  ControlSourceReader:
+    responsibility: read_text_or_structured_control_sources_with_revision_identity
+    methods:
+      - name: read_source
+        input: {locator: string}
+        output:
+          content: object_or_text
+          source_ref: SourceRef
+          integrity: IntegrityVerdict
+    must_not: [interpret_semantic_authority, mutate_source]
+
+  ImmutableEventReader:
+    responsibility: enumerate_and_read_immutable_lifecycle_events
+    methods:
+      - name: list_events
+        input: {event_root: string, after_revision: string_or_null}
+        output: [EventEnvelope]
+    guarantees: [stable_event_identity, observed_revision_or_hash]
+    must_not: [materialize_policy_decisions, mutate_events]
+
+  ArtifactReader:
+    responsibility: retrieve_actual_artifact_bytes_or_explicit_provider_revision_identity
+    methods:
+      - name: open_bytes
+        input: {locator: string}
+        output: ByteStreamWithSourceRef_or_UNAVAILABLE
+      - name: read_identity
+        input: {locator: string}
+        output: ArtifactIdentityObservation
+    guarantees:
+      - never_reconstruct_bytes_through_llm_text
+      - byte_hash_only_when_actual_bytes_are_supplied
+    must_not: [declare_semantic_equivalence_as_identity]
+
+  RuntimeObservationSource:
+    responsibility: supply_scheduler_worker_and_runtime_observations
+    methods:
+      - name: observe_runtime
+        input: {target_id: string}
+        output: RuntimeObservation
+    must_not: [classify_green_amber_red, advance_task_state]
+
+  ExecutorCapabilitySource:
+    responsibility: normalize_executor_capabilities_from_any_provider
+    methods:
+      - name: get_capabilities
+        input: {executor_id: string}
+        output: ExecutorCapabilities
+    must_not: [select_executor_by_provider_name_inside_core_policy]
+
+  ClaimReader:
+    responsibility: read_current_claim_or_lease_identity
+    methods:
+      - name: read_claim
+        input: {execution_unit_id: string}
+        output: ClaimObservation_or_NONE
+    must_not: [acquire_or_release_claim_in_v0_1_core]
+
+  DispatchAdapter:
+    responsibility: optional_future_boundary_for_workflow_runtime_dispatch
+    v0_1_mode: SHADOW_OR_NOT_IMPLEMENTED
+    methods:
+      - name: submit
+        input: {execution_capsule: ExecutionCapsule}
+        output: DispatchReceipt
+    must_not:
+      - become_core_authority
+      - reinterpret_capsule_permissions
+      - dispatch_candidate_capsule
+
+  ShadowOutputSink:
+    responsibility: write_isolated_shadow_results_and_explanations
+    methods:
+      - name: write_result
+        input: {result_type: string, payload: object, source_revisions: [SourceRef]}
+        output: SinkReceipt
+    guarantees: [noncanonical_output_classification]
+    must_not: [mutate_production_control_state]
+
+  Clock:
+    responsibility: provide_time_for_observation_and_expiry_checks
+    methods:
+      - name: now
+        output: timestamp
+    test_requirement: injectable_fixed_clock
+
+  IdGenerator:
+    responsibility: generate_or_supply_ids_without_policy_meaning
+    methods:
+      - name: new_id
+        input: {kind: string}
+        output: string
+    test_requirement: injectable_deterministic_generator
+
+normalized_types:
+  EventEnvelope:
+    fields: [event_id, event_type, payload, source_ref, predecessor_ref]
+  ByteStreamWithSourceRef:
+    fields: [stream_handle, source_ref, byte_size_if_known]
+  ArtifactIdentityObservation:
+    fields: [locator, byte_size, sha256, provider_revision, source_ref, availability]
+  RuntimeObservation:
+    fields: [target_id, observation_type, values, observed_at, source_ref]
+  ExecutorCapabilities:
+    fields: [executor_id, capabilities, constraints, provider_metadata_evidence]
+  ClaimObservation:
+    fields: [claim_id, execution_unit_id, claimant, lease_revision, status, source_ref]
+  DispatchReceipt:
+    fields: [dispatch_id, accepted, runtime_locator, source_ref]
+  SinkReceipt:
+    fields: [result_locator, revision, source_ref]
+
+architecture_rule:
+  core_depends_on_ports: true
+  adapters_depend_on_provider_sdks: allowed
+  provider_objects_cross_core_boundary: false
+  adapter_substitution_with_equivalent_normalized_observation_must_preserve_core_decision: true
