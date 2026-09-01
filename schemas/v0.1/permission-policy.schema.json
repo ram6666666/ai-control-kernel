@@ -4,28 +4,26 @@
   "title": "AI Control Kernel Permission Policy v0.1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "policy_id", "status", "results", "operation_defaults", "predicates", "condition_rules", "semantic_review", "evaluation_order"],
+  "required": ["schema_version", "policy_id", "status", "predicate_registry", "condition_registry", "results", "outcome_semantics", "operation_defaults", "condition_rules", "semantic_review", "evaluation_order"],
   "properties": {
     "schema_version": {"const": "ack.permission_policy.v0.1"},
     "policy_id": {"type": "string", "minLength": 1},
     "status": {"type": "string"},
-    "results": {"type": "object", "minProperties": 4},
+    "predicate_registry": {"type": "string", "minLength": 1},
+    "condition_registry": {"type": "string", "minLength": 1},
+    "results": {"type": "object", "minProperties": 4, "additionalProperties": {"type": "string"}},
+    "outcome_semantics": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "object"}},
     "operation_defaults": {
       "type": "object",
       "required": ["READ_DIAGNOSE", "DISCUSS_PLAN", "SHADOW_VALIDATE", "WRITE_DIAGNOSTIC_EVIDENCE", "PRODUCE_NONCANONICAL_WORKING_ARTIFACT", "CLAIM_EXECUTION_UNIT", "EXECUTE_AND_CHECKPOINT", "PUBLISH_AUTHORITATIVE_ARTIFACT", "ISSUE_INDEPENDENT_AUDIT_VERDICT", "MUTATE_CONTROL_STATE", "PROMOTE_OR_ACCEPT_CANONICAL", "LIVENESS_REPAIR", "POLICY_RECONCILIATION"],
       "additionalProperties": {"$ref": "#/$defs/RiskDefault"}
     },
-    "predicates": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string"}},
-    "condition_rules": {
-      "type": "object",
-      "minProperties": 1,
-      "additionalProperties": {"$ref": "#/$defs/ConditionRule"}
-    },
+    "condition_rules": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/ConditionRule"}},
     "semantic_review": {
       "type": "object",
-      "required": ["code", "result", "ordinary_authority_effect_allowed", "allowed_operations_without_authority_effect"],
+      "required": ["codes", "result", "ordinary_authority_effect_allowed", "allowed_operations_without_authority_effect"],
       "properties": {
-        "code": {"const": "S_SEMANTIC_AMBIGUITY"},
+        "codes": {"type": "array", "minItems": 1, "items": {"enum": ["S_AUTHORITY_MEANING_AMBIGUOUS", "S_SCOPE_CHANGE_AMBIGUOUS", "S_REQUIREMENT_CONFLICT", "S_ACCEPTANCE_JUDGMENT_REQUIRED"]}, "uniqueItems": true},
         "result": {"const": "SEMANTIC_REVIEW_REQUIRED"},
         "ordinary_authority_effect_allowed": {"const": false},
         "allowed_operations_without_authority_effect": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
@@ -53,7 +51,7 @@
       "required": ["result"],
       "properties": {
         "result": {"$ref": "#/$defs/OutcomeToken"},
-        "require_predicates": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        "require_predicates": {"type": "array", "items": {"pattern": "^P_[A-Z0-9_]+$"}, "uniqueItems": true}
       },
       "additionalProperties": false
     },
@@ -65,7 +63,7 @@
         "allow_operations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
         "deny_operations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
         "conditional_operations": {"type": "object", "additionalProperties": {"$ref": "#/$defs/ConditionalOutcome"}},
-        "require_predicates": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "require_predicates": {"type": "array", "items": {"pattern": "^P_[A-Z0-9_]+$"}, "uniqueItems": true},
         "canonical_promotion": {"$ref": "#/$defs/ConditionalOutcome"},
         "deny_ordinary_execution": {"type": "boolean"},
         "recovery_operations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
