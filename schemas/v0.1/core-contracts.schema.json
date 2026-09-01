@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ai-control-kernel/schemas/v0.1/core-contracts.schema.json",
+  "title": "AI Control Kernel v0.1 Core Contracts",
+  "$defs": {
+    "SourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_type", "locator", "authority_class"],
+      "properties": {
+        "source_type": {"enum": ["POLICY", "REGISTRY", "PROJECT_STATE", "TASK_AUTHORITY", "PACKAGE_AUTHORITY", "IMMUTABLE_EVENT", "ARTIFACT_RECORD", "RUNTIME_OBSERVATION", "DERIVED_VIEW", "CLAIM", "SCHEMA", "OTHER"]},
+        "locator": {"type": "string", "minLength": 1},
+        "revision": {"type": ["string", "null"]},
+        "content_hash": {"type": ["string", "null"]},
+        "observed_at": {"type": ["string", "null"], "format": "date-time"},
+        "authority_class": {"enum": ["CANONICAL", "AUTHORITATIVE_CURRENT", "NARROWING_AUTHORITY", "EVIDENCE", "DERIVED"]}
+      }
+    },
+    "IntegrityVerdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "algorithm", "expected", "observed"],
+      "properties": {
+        "status": {"enum": ["VERIFIED", "UNVERIFIED", "MISMATCH", "NOT_APPLICABLE"]},
+        "algorithm": {"enum": ["SHA256", "GIT_BLOB_SHA", "PROVIDER_REVISION", "OTHER", null]},
+        "expected": {"type": ["string", "null"]},
+        "observed": {"type": ["string", "null"]},
+        "source": {"oneOf": [{"$ref": "#/$defs/SourceRef"}, {"type": "null"}]}
+      }
+    },
+    "ProvenancedValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "source", "resolution_rule", "warnings"],
+      "properties": {
+        "value": {},
+        "source": {"$ref": "#/$defs/SourceRef"},
+        "resolution_rule": {"type": "string", "minLength": 1},
+        "warnings": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "EffectiveState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "resolved_at", "resolution_id", "sources", "policy", "identity", "execution", "constraints", "storage", "claim", "health", "provenance_trace"],
+      "properties": {
+        "schema_version": {"const": "ack.effective_state.v0.1"},
+        "resolved_at": {"type": "string", "format": "date-time"},
+        "resolution_id": {"type": "string", "minLength": 1},
+        "sources": {"type": "object"},
+        "policy": {"type": "object"},
+        "identity": {"type": "object"},
+        "execution": {"type": "object"},
+        "constraints": {"type": "object"},
+        "storage": {"type": "object"},
+        "claim": {"type": "object"},
+        "health": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mechanical_summary", "authority_resolution", "semantic_review_required", "observed_condition_codes", "warnings", "blockers"],
+          "properties": {
+            "mechanical_summary": {"enum": ["GREEN", "AMBER", "RED"]},
+            "authority_resolution": {"enum": ["UNIQUE", "AMBIGUOUS", "CONFLICT"]},
+            "semantic_review_required": {"type": "boolean"},
+            "observed_condition_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+            "warnings": {"type": "array", "items": {"type": "string"}},
+            "blockers": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "provenance_trace": {"type": "object", "additionalProperties": {"$ref": "#/$defs/SourceRef"}}
+      }
+    },
+    "OperationClass": {
+      "enum": ["READ_DIAGNOSE", "DISCUSS_PLAN", "SHADOW_VALIDATE", "WRITE_DIAGNOSTIC_EVIDENCE", "PRODUCE_NONCANONICAL_WORKING_ARTIFACT", "CLAIM_EXECUTION_UNIT", "EXECUTE_AND_CHECKPOINT", "PUBLISH_AUTHORITATIVE_ARTIFACT", "ISSUE_INDEPENDENT_AUDIT_VERDICT", "MUTATE_CONTROL_STATE", "PROMOTE_OR_ACCEPT_CANONICAL", "LIVENESS_REPAIR", "POLICY_RECONCILIATION"]
+    },
+    "TransitionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "request_id", "requested_at", "operation_class", "actor", "source_authorization", "project_id", "expected_current_state", "transition", "idempotency_key", "required_evidence"],
+      "properties": {
+        "schema_version": {"const": "ack.transition_request.v0.1"},
+        "request_id": {"type": "string", "minLength": 1},
+        "requested_at": {"type": "string", "format": "date-time"},
+        "operation_class": {"$ref": "#/$defs/OperationClass"},
+        "actor": {"type": "object", "required": ["role"], "properties": {"role": {"type": "string"}, "actor_id": {"type": ["string", "null"]}}, "additionalProperties": false},
+        "source_authorization": {"type": "array", "items": {"$ref": "#/$defs/SourceRef"}},
+        "project_id": {"type": "string", "minLength": 1},
+        "task_id": {"type": ["string", "null"]},
+        "package_id": {"type": ["string", "null"]},
+        "expected_current_state": {"type": "object", "required": ["raw_status", "state_revision"], "properties": {"raw_status": {"type": ["string", "null"]}, "state_revision": {"type": ["string", "null"]}}, "additionalProperties": false},
+        "transition": {"type": "object", "required": ["type", "target_status", "requested_mutations"], "properties": {"type": {"type": "string"}, "target_status": {"type": ["string", "null"]}, "requested_mutations": {"type": "object"}}, "additionalProperties": false},
+        "idempotency_key": {"type": "string", "minLength": 1},
+        "required_evidence": {"type": "array", "items": {"$ref": "#/$defs/SourceRef"}}
+      }
+    },
+    "DecisionCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "result", "evidence", "reason"],
+      "properties": {
+        "check_id": {"type": "string"},
+        "result": {"enum": ["PASS", "FAIL", "WARN", "NOT_APPLICABLE"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/SourceRef"}},
+        "reason": {"type": "string"}
+      }
+    },
+    "TransitionDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "decision_id", "request_id", "decided_at", "operation_class", "result", "risk_mode", "observed_condition_codes", "blocking_condition_codes", "nonblocking_warning_codes", "checks", "conflicts", "missing_requirements", "semantic_questions", "write_plan"],
+      "properties": {
+        "schema_version": {"const": "ack.transition_decision.v0.1"},
+        "decision_id": {"type": "string"},
+        "request_id": {"type": "string"},
+        "decided_at": {"type": "string", "format": "date-time"},
+        "operation_class": {"$ref": "#/$defs/OperationClass"},
+        "result": {"enum": ["ALLOW", "DENY", "SEMANTIC_REVIEW_REQUIRED", "NOOP_IDEMPOTENT"]},
+        "risk_mode": {"enum": ["GREEN", "AMBER", "RED"]},
+        "observed_condition_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "blocking_condition_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "nonblocking_warning_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "checks": {"type": "array", "items": {"$ref": "#/$defs/DecisionCheck"}},
+        "conflicts": {"type": "array"},
+        "missing_requirements": {"type": "array"},
+        "semantic_questions": {"type": "array"},
+        "write_plan": {"type": "object", "required": ["allowed", "required_event_type", "target_writer_role", "expected_current_revision"], "properties": {"allowed": {"type": "boolean"}, "required_event_type": {"type": ["string", "null"]}, "target_writer_role": {"type": ["string", "null"]}, "expected_current_revision": {"type": ["string", "null"]}}, "additionalProperties": false}
+      }
+    },
+    "CandidateCapsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "capsule_type", "capsule_id", "compiled_at", "source_revisions", "identity", "execution", "inputs", "outputs", "concurrency", "acceptance", "capabilities", "integrity", "provenance_trace"],
+      "properties": {
+        "schema_version": {"const": "ack.candidate_capsule.v0.1"},
+        "capsule_type": {"const": "CANDIDATE"},
+        "capsule_id": {"type": "string"},
+        "compiled_at": {"type": "string", "format": "date-time"},
+        "source_revisions": {"type": "object"},
+        "identity": {"type": "object"},
+        "execution": {"type": "object"},
+        "inputs": {"type": "object"},
+        "outputs": {"type": "object"},
+        "concurrency": {"type": "object", "required": ["claim_id", "lease_or_expected_revision", "idempotency_key"], "properties": {"claim_id": {"type": "null"}, "lease_or_expected_revision": {"type": "null"}, "idempotency_key": {"type": "string"}}, "additionalProperties": false},
+        "acceptance": {"type": "object"},
+        "capabilities": {"type": "object"},
+        "integrity": {"type": "object"},
+        "provenance_trace": {"type": "object"}
+      }
+    },
+    "ExecutionCapsule": {
+      "allOf": [
+        {"$ref": "#/$defs/CandidateCapsule"},
+        {
+          "properties": {
+            "schema_version": {"const": "ack.execution_capsule.v0.1"},
+            "capsule_type": {"const": "EXECUTION"},
+            "concurrency": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["claim_id", "claimant", "lease_or_expected_revision", "idempotency_key", "claim_source"],
+              "properties": {
+                "claim_id": {"type": "string", "minLength": 1},
+                "claimant": {"type": "string", "minLength": 1},
+                "lease_or_expected_revision": {"type": "string", "minLength": 1},
+                "idempotency_key": {"type": "string", "minLength": 1},
+                "claim_source": {"$ref": "#/$defs/SourceRef"}
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {"$ref": "#/$defs/EffectiveState"},
+    {"$ref": "#/$defs/TransitionRequest"},
+    {"$ref": "#/$defs/TransitionDecision"},
+    {"$ref": "#/$defs/CandidateCapsule"},
+    {"$ref": "#/$defs/ExecutionCapsule"}
+  ]
+}
