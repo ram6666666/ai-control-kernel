@@ -1,0 +1,85 @@
+schema_version: ack.design_freeze_manifest.v0.1
+release_id: ACK-DESIGN-V0.1
+status: DESIGN_V0_1_FREEZE_READY
+frozen_at_utc: 2026-09-01T21:02:11Z
+repository: ram6666666/ai-control-kernel
+source_branch: design/v0.1-risk-fixtures
+design_content_head_before_manifest: 087862a0ec8cc8effff62415482e859682807707
+audit_verdict: DESIGN_V0_1_FREEZE_READY
+audit_pointer: docs/design/v0.1/DESIGN_AUDIT_002.md
+implementation_authorized: false
+production_cutover_authorized: false
+
+normative_principles:
+  - path: docs/architecture/INTEGRATION_FIRST.md
+    blob_sha: 206056925181eede72eeb9b5f99357c24571c2f3
+
+normative_design_contracts:
+  - path: docs/design/v0.1/DESIGN_BRIEF.md
+    blob_sha: fbfcce5b6f1b199d8a38aa362efcd57a2a35d961
+  - path: docs/design/v0.1/MACHINE_CONTRACTS.md
+    blob_sha: 60ef298341fb19148893b8bc95a34f830db01557
+  - path: docs/design/v0.1/CONTROL_SURFACE_MAP.md
+    blob_sha: b2f8f52689a7cba607f0eb01970ba43a4e5eb728
+  - path: docs/design/v0.1/OPERATION_PERMISSION_MATRIX.md
+    blob_sha: d7077ba514d81250d82b07abb0c1e060a5ff446d
+  - path: docs/design/v0.1/GOLDEN_FIXTURE_PLAN.md
+    blob_sha: 2068c34489dacab4d9842059fd963663156941f5
+  - path: docs/design/v0.1/ADAPTER_PORTS_AND_DEPENDENCY_DECISION.md
+    blob_sha: 154199c5d7853359e3bb2edd9237a47d9308d3e3
+  - path: docs/design/v0.1/DESIGN_AUDIT_002.md
+    blob_sha: 6f2e95f07714f905c5d846ba8df6b2f8ae303ea2
+
+normative_machine_specs:
+  - path: spec/v0.1/permission_policy.yaml
+    blob_sha: 51862c6ee4abcc927bf728cf91d31f2577da51cb
+  - path: spec/v0.1/predicate_registry.yaml
+    blob_sha: 2c3a758f3ff11ac17fb2cfe058418bd3909c0800
+  - path: spec/v0.1/condition_detectors.yaml
+    blob_sha: 6a381f2cc07355b28cb8861aaf2f5d7017cba602
+  - path: spec/v0.1/state_machine.yaml
+    blob_sha: 77c938f86455b78c0ed99bb02b08caa983d038d9
+  - path: spec/v0.1/status_normalization.yaml
+    blob_sha: 19c1f3b2e04045d25ead65d6128c23fbc3ea0ea3
+  - path: spec/v0.1/ports.yaml
+    blob_sha: b8666e219f582e54461d905849bd88b88347b577
+  - path: spec/v0.1/capsule_lifecycle.yaml
+    blob_sha: 9de0e836bf6bace916cbadbf53b12194a78695f5
+
+normative_schemas:
+  - path: schemas/v0.1/core-contracts.schema.json
+    blob_sha: 8ff676497d7f6244ecbc86eed2dd55b84c3e1070
+  - path: schemas/v0.1/permission-policy.schema.json
+    blob_sha: 8df156910ce626795cf9dcfb3e8cbfddf156273f
+  - path: schemas/v0.1/predicate-registry.schema.json
+    blob_sha: 83311dc1cfc0480cdde4cfcca9766cf6e0c52032
+  - path: schemas/v0.1/state-machine.schema.json
+    blob_sha: 57c1c766e3ba138aa91b3ac6107ae145e176af6a
+  - path: schemas/v0.1/status-normalization.schema.json
+    blob_sha: d0c4123b06819c2445c9d97ea7ed103e282d6aaf
+
+historical_non_normative_audit:
+  - path: docs/design/v0.1/DESIGN_AUDIT_001.md
+    purpose: preserved failed-first-audit provenance
+
+verification_evidence:
+  permission_policy_schema_validation_errors: 0
+  state_machine_schema_validation_errors: 0
+  validation_runtime_note: Python 3.13.5 / jsonschema 4.26.0 / PyYAML 6.0.3 during design closure
+  exact_blob_manifest_complete_for_normative_files: true
+
+freeze_semantics:
+  normative_files_may_not_change_silently: true
+  implementation_must_follow_this_release: true
+  material_semantic_change_requires_new_design_revision_and_audit: true
+  coding_model_may_not_redesign_policy_to_make_tests_pass: true
+  production_control_plane_is_not_cut_over: true
+  parent_global_control_authority_remains: ram6666666/ai-
+
+next_implementation_package:
+  package_id: ACK-IMPL-P01
+  title: Pure deterministic core + schemas + local fixtures
+  codex_recommended: true
+  work_required: false
+  implementation_authorization: PENDING_SEPARATE_PACKAGE_RELEASE
+  production_write_authorization: false
