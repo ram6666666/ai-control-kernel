@@ -1,0 +1,69 @@
+schema_version: ack.predicate_registry.v0.1
+status: DESIGN_SPEC
+
+contract:
+  arbitrary_expression_evaluation_forbidden: true
+  unknown_predicate_id_result: DENY_OR_DESIGN_ERROR
+  every_check_returns_evidence: true
+
+predicates:
+  P_AUTHORITY_UNIQUE:
+    evaluator: check_authority_unique
+    input_fields: [effective_state.health.authority_resolution]
+    pass_when: UNIQUE
+  P_REQUIRED_INTEGRITY_VERIFIED_OR_NA:
+    evaluator: check_required_integrity
+    input_fields: [operation_required_integrity_verdicts]
+    pass_when_all_status_in: [VERIFIED, NOT_APPLICABLE]
+  P_WRITER_OWNER_VALID:
+    evaluator: check_writer_owner
+    input_fields: [actor_role, target_state_class, single_writer_map, delegations]
+    pass_when: owner_or_valid_delegation
+  P_SOURCE_REVISION_CURRENT:
+    evaluator: check_source_revision_current
+    input_fields: [expected_revisions, observed_current_revisions]
+    pass_when: exact_match
+  P_NO_PERMISSION_WIDENING:
+    evaluator: check_permission_intersection
+    input_fields: [parent_permissions, local_restrictions, proposed_permissions]
+    pass_when: proposed_subset_of_effective_intersection
+  P_REQUIRED_GATES_PRESENT:
+    evaluator: check_required_gates
+    input_fields: [operation_gate_spec, available_evidence]
+    pass_when: all_required_gates_satisfied
+  P_NO_CLAIM_CONFLICT:
+    evaluator: check_claim_conflict_absent
+    input_fields: [active_claims, proposed_claim, idempotency_record]
+    pass_when: no_incompatible_active_claim
+  P_RECOVERY_NO_CONTENT_ADVANCE:
+    evaluator: check_recovery_no_content_advance
+    input_fields: [requested_mutations]
+    pass_when: no_content_state_advancement
+  P_RECOVERY_TARGETS_OBSERVED_DEFECT:
+    evaluator: check_recovery_targets_observed_defect
+    input_fields: [requested_repair_condition_code, observed_condition_codes]
+    pass_when: requested_code_is_observed
+  P_SHADOW_INPUT_TRUST_SAFE:
+    evaluator: check_shadow_input_trust
+    input_fields: [shadow_inputs, operation_gate]
+    pass_when: no_untrusted_input_treated_as_authoritative
+  P_NONCANONICAL_OUTPUT_EXPLICIT:
+    evaluator: check_noncanonical_output_explicit
+    input_fields: [requested_output_authority_class]
+    pass_when: NONCANONICAL
+  P_AUDIT_INPUT_EXACT_IF_REQUIRED:
+    evaluator: check_audit_input_integrity
+    input_fields: [audit_gate, audit_input_identity, retrieval_observation]
+    pass_when: exact_identity_verified_or_gate_not_exact
+  P_PROMOTION_AMBER_IRRELEVANT:
+    evaluator: check_promotion_amber_relevance
+    input_fields: [observed_amber_conditions, promotion_gate_relevance_map]
+    pass_when: no_observed_amber_condition_intersects_required_promotion_facets
+  P_RECOVERY_ROLE_VALID:
+    evaluator: check_recovery_role
+    input_fields: [actor_role, recovery_owner_class]
+    pass_when: owner_or_valid_delegation
+  P_POLICY_RECONCILIATION_MECHANICAL_ONLY:
+    evaluator: check_policy_reconciliation_scope
+    input_fields: [requested_policy_repair, semantic_change_flags]
+    pass_when: mechanically_decidable_no_semantic_policy_change
