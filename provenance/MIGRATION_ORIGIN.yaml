@@ -1,0 +1,62 @@
+schema_version: 0.2
+migration_id: ACK-MIGRATION-20260901-INITIAL
+status: VERIFIED_BRANCH
+started_at_utc: 2026-09-01T19:32:55Z
+target_repository: ram6666666/ai-control-kernel
+target_branch: migration/initial-design-import
+
+origin:
+  repository: ram6666666/ai-
+  design_ref: ai-control-kernel-v0.1-design
+  control_task_ref: main
+  control_task_path: ai-control/CONTROL_TASKS/AI_CONTROL_KERNEL_V0_1.yaml
+  control_task_blob_sha_at_migration_start: 06b65ce06e9c6da963249f2c142f52b69e44c508
+  migration_command_path: ai-control/CONTROL_CENTER/COMMANDS/2026-09-01/GCC-20260901T193255Z-AI-CONTROL-KERNEL-REPO-MIGRATION.yaml
+  migration_command_commit: 89ccf6064e1b246e1e4f864e4332d494f8629c88
+
+imported_design_sources:
+  - source_path: ai-control/DESIGNS/AI_CONTROL_KERNEL_V0_1/DESIGN_BRIEF.md
+    source_blob_sha: 4d9152dd0a0a25c69283f55f8e58d0d4dd378ba1
+    target_path: docs/design/v0.1/DESIGN_BRIEF.md
+    target_blob_sha_verified: 4d9152dd0a0a25c69283f55f8e58d0d4dd378ba1
+    preservation: EXACT_TEXT_IMPORT_VERIFIED
+  - source_path: ai-control/DESIGNS/AI_CONTROL_KERNEL_V0_1/MACHINE_CONTRACTS.md
+    source_blob_sha: 6effa577b0bad67a6268d228c16af11767e7e833
+    target_path: docs/design/v0.1/MACHINE_CONTRACTS.md
+    target_blob_sha_verified: 6effa577b0bad67a6268d228c16af11767e7e833
+    preservation: EXACT_TEXT_IMPORT_VERIFIED
+  - source_path: ai-control/DESIGNS/AI_CONTROL_KERNEL_V0_1/CONTROL_SURFACE_MAP.md
+    source_blob_sha: b2f8f52689a7cba607f0eb01970ba43a4e5eb728
+    target_path: docs/design/v0.1/CONTROL_SURFACE_MAP.md
+    target_blob_sha_verified: b2f8f52689a7cba607f0eb01970ba43a4e5eb728
+    preservation: EXACT_TEXT_IMPORT_VERIFIED
+
+new_repo_native_design_decisions:
+  - path: docs/architecture/INTEGRATION_FIRST.md
+    provenance: user decision at 2026-09-01T19:28:44Z plus control-conversation normalization
+
+canonical_split_during_migration:
+  standalone_repo:
+    role: TARGET_CANONICAL_FOR_KERNEL_ENGINEERING_DESIGN_CODE_SCHEMAS_TESTS_RELEASES_AFTER_VERIFICATION
+  old_ai_repo:
+    role: GLOBAL_AI_CONTROL_PLANE_AND_CURRENT_CONTROL_TASK_LINEAGE
+    remains_global_policy_authority: true
+    remains_control_task_authority_initially: true
+
+forbidden_during_migration:
+  - dual_peer_task_authority
+  - implementation_without_design_freeze
+  - production_cutover
+  - silent deletion_or_rewrite_of_origin_provenance
+  - copying_global_control_policy_into_this_repo_as_independent_peer_authority
+
+verification:
+  imported_design_blob_shas_match_origin: true
+  target_files_read_back: true
+  migration_pr_merged: false
+  old_repo_integration_pointer_created: false
+  old_control_task_updated_last: false
+
+next_step: OPEN_AND_VERIFY_MIGRATION_PR_THEN_MERGE
+work_required: false
+codex_required: false
