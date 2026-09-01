@@ -101,18 +101,31 @@ conditions:
     predicates:
       any_required_gate_unsatisfied: true
 
-  S_SEMANTIC_AMBIGUITY:
-    detector: detect_semantic_boundary
-    required_inputs: [requested_decision, machine_contract]
-    trigger_if_any:
-      - requires_interpretation_of_unstructured_meaning
-      - requires_scientific_or_quality_judgment
-      - requires_material_scope_change
-      - unresolved_same_rank_textual_authority_without_machine_rule
+semantic_conditions:
+  S_AUTHORITY_MEANING_AMBIGUOUS:
+    detector: detect_authority_meaning_ambiguity
+    required_inputs: [same_rank_textual_authorities, declared_precedence_rules]
+    trigger_when: ranking_requires_interpretation_of_intended_meaning
+    result: SEMANTIC_REVIEW_REQUIRED
+  S_SCOPE_CHANGE_AMBIGUOUS:
+    detector: detect_scope_change_ambiguity
+    required_inputs: [requested_change, current_scope_contract]
+    trigger_when: material_rescope_cannot_be_determined_from_machine_fields
+    result: SEMANTIC_REVIEW_REQUIRED
+  S_REQUIREMENT_CONFLICT:
+    detector: detect_requirement_conflict_boundary
+    required_inputs: [requirements, precedence_rules]
+    trigger_when: apparent_conflict_requires_semantic_interpretation
+    result: SEMANTIC_REVIEW_REQUIRED
+  S_ACCEPTANCE_JUDGMENT_REQUIRED:
+    detector: detect_acceptance_judgment_boundary
+    required_inputs: [acceptance_request, mechanical_gate_results]
+    trigger_when: adequacy_correctness_or_value_judgment_is_intentionally_nonmechanical
     result: SEMANTIC_REVIEW_REQUIRED
 
 output_contract:
   condition_code: string
+  condition_class: AMBER | RED | SEMANTIC
   detector_id: string
   observed: boolean
   evidence: [SourceRef]
