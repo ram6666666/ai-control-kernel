@@ -1,0 +1,223 @@
+schema_version: ack.implementation_package.v0.1
+package_id: ACK-IMPL-P01
+title: Pure deterministic core plus sanitized local fixtures
+status: FROZEN_READY_FOR_EXECUTOR
+package_class: BOUNDED_IMPLEMENTATION
+created_at_utc: 2026-09-01T21:34:53Z
+frozen_at_utc: 2026-09-01T21:34:53Z
+package_review: provenance/reviews/ACK-IMPL-P01-PACKAGE-REVIEW.yaml
+production_cutover_authorized: false
+production_state_write_authorized: false
+
+source_authority:
+  engineering_repository: ram6666666/ai-control-kernel
+  frozen_design_commit: 4eafb779256325471ae0461c17fec9a779eb188a
+  freeze_manifest:
+    path: releases/design-v0.1/FREEZE_MANIFEST.yaml
+    blob_sha: 5d274448d6782e193d8ed0b2ea0e62fc8b73541d
+  final_design_audit:
+    path: docs/design/v0.1/DESIGN_AUDIT_002.md
+    blob_sha: 6f2e95f07714f905c5d846ba8df6b2f8ae303ea2
+    verdict: DESIGN_V0_1_FREEZE_READY
+  parent_control_repository: ram6666666/ai-
+  parent_task: ai-control/CONTROL_TASKS/AI_CONTROL_KERNEL_V0_1.yaml
+  user_command: ai-control/CONTROL_CENTER/COMMANDS/2026-09-01/GCC-20260901T213051Z-AI-CONTROL-KERNEL-P01-PREP.yaml
+
+executor_contract:
+  preferred_executor: CODEX
+  work_required: false
+  executor_may_redesign_policy: false
+  executor_may_modify_frozen_normative_semantics: false
+  executor_must_stop_on_spec_conflict: true
+  executor_must_not_use_conversation_memory_as_authority: true
+  required_startup_reads:
+    - releases/design-v0.1/FREEZE_MANIFEST.yaml
+    - docs/design/v0.1/DESIGN_AUDIT_002.md
+    - docs/architecture/INTEGRATION_FIRST.md
+    - docs/design/v0.1/MACHINE_CONTRACTS.md
+    - docs/design/v0.1/OPERATION_PERMISSION_MATRIX.md
+    - docs/design/v0.1/GOLDEN_FIXTURE_PLAN.md
+    - docs/design/v0.1/ADAPTER_PORTS_AND_DEPENDENCY_DECISION.md
+    - spec/v0.1/
+    - schemas/v0.1/
+    - packages/v0.1/ACK-IMPL-P01.yaml
+
+branch_and_pr_policy:
+  direct_main_implementation_commits: FORBIDDEN
+  implementation_branch_name: impl/ack-impl-p01
+  implementation_branch_base: EXACT_PACKAGE_RELEASE_MERGE_COMMIT_TO_BE_RECORDED_AFTER_PACKAGE_PR_MERGE
+  target_branch: main
+  pull_request_required: true
+  independent_review_required: true
+  implementing_executor_may_not_be_sole_acceptance_authority: true
+  merge_allowed_only_after_all_required_gates_pass: true
+  merge_method: REVIEWED_REPOSITORY_DEFAULT
+
+frozen_paths_read_only_during_p01:
+  - docs/architecture/INTEGRATION_FIRST.md
+  - docs/design/v0.1/
+  - releases/design-v0.1/FREEZE_MANIFEST.yaml
+  - spec/v0.1/
+  - schemas/v0.1/
+  - packages/v0.1/ACK-IMPL-P01.yaml
+
+scope:
+  required:
+    - create a conventional Python package using src layout
+    - implement schema loading and Draft 2020-12 validation
+    - implement deterministic canonical JSON serialization
+    - implement exact raw-status normalization with UNKNOWN fallback
+    - implement closed predicate-registry dispatch without arbitrary expression evaluation
+    - implement deterministic condition detectors with evidence/provenance output
+    - implement operation-scoped permission evaluation from frozen permission_policy.yaml
+    - implement explicit state-machine transition validation from frozen state_machine.yaml
+    - implement EffectiveState resolution sufficient for F01-F10 and frozen precedence rules
+    - implement CandidateCapsule compilation and validation
+    - implement claim-bound ExecutionCapsule validation and invalidation rules
+    - implement immutable-event validation and bounded local materialization needed by fixtures
+    - implement SHA-256 and byte-size identity from actual binary streams only
+    - implement filesystem and fixture adapters only
+    - create sanitized F01-F10 fixture directories and exact golden outputs
+    - create unit negative invariant and golden-regression tests
+    - create CI and project packaging metadata
+  explicitly_excluded:
+    - GitHub production adapter
+    - Google Drive production adapter
+    - Temporal LangGraph Restate Dapr or other workflow-runtime adapter
+    - model-provider SDK integration
+    - production dispatcher or scheduler
+    - production claim acquisition
+    - production task or package state writes
+    - W5 watchdog or Global Control Center replacement
+    - database or service deployment
+    - UI or dashboard
+    - production cutover
+
+implementation_boundaries:
+  core_must_not_import:
+    - agent frameworks
+    - workflow engine SDKs
+    - model provider SDKs
+    - GitHub SDKs
+    - Google Drive SDKs
+    - database ORMs
+    - web frameworks
+  runtime_direct_dependencies_allowed:
+    - jsonschema
+    - PyYAML
+  python_standard_library_preferred_for:
+    - dataclasses
+    - typing.Protocol
+    - enum
+    - pathlib
+    - hashlib
+    - json
+  unsafe_yaml_object_construction: FORBIDDEN
+  dynamic_eval_or_expression_interpreter: FORBIDDEN
+  llm_or_network_call_in_core_tests: FORBIDDEN
+  llm_byte_transcription: FORBIDDEN
+
+repository_layout_constraints:
+  source_root: src/ai_control_kernel/
+  tests_root: tests/
+  fixture_root: tests/fixtures/
+  workflow_root: .github/workflows/
+  packaging_file: pyproject.toml
+  exact_module_decomposition: IMPLEMENTATION_DETAIL_WITHIN_SCOPE
+
+quality_gates:
+  supported_python:
+    - '3.12'
+    - '3.13'
+  mandatory_static_checks:
+    - ruff_check
+    - ruff_format_check
+    - mypy_strict_on_src
+  mandatory_build_check:
+    - clean_wheel_and_sdist_build
+  mandatory_test_checks:
+    - pytest_all
+    - golden_regression_F01_to_F10
+    - invariant_and_negative_tests
+    - schema_registry_cross_reference_tests
+    - deterministic_serialization_repeatability
+  coverage_thresholds:
+    line_percent_minimum: 95
+    branch_percent_minimum: 90
+    note: >-
+      Coverage is only a floor. Every permission condition/operation rule, every referenced predicate ID,
+      every declared state-machine edge, UNKNOWN normalization, idempotent replay and conflict path must
+      receive explicit semantic test coverage even if generic coverage thresholds are already met.
+  ci_requirements:
+    - run_from_clean_checkout
+    - run_on_python_3_12_and_3_13
+    - no_network_or_provider_credentials_required_for_unit_and_golden_tests
+    - all_required_checks_block_merge
+  dependency_reproducibility:
+    runtime_direct_dependency_set_may_not_expand_without_deviation: true
+    project_dependencies_must_use_reviewed_version_bounds: true
+    ci_must_commit_a_reproducible_pinned_constraints_or_lock_artifact: true
+    dependency_updates_require_reviewed_change: true
+
+security_and_integrity_gates:
+  - YAML parsing uses safe_load or equivalent only
+  - canonical golden truth is UTF-8 canonical JSON rather than YAML emitter bytes
+  - artifact hashing reads bytes from binary file or stream handles only
+  - filesystem adapters resolve paths beneath an explicit configured root and reject path escape
+  - filesystem adapters do not execute or import fixture content
+  - secrets tokens signed URLs private identifiers and personal data are forbidden in public fixtures
+  - adapters return normalized observations and cannot emit policy decisions
+  - unknown condition operation predicate or status cases fail closed or request semantic review exactly as frozen specs require
+
+fixture_and_golden_policy:
+  required_public_fixtures: [F01, F02, F03A, F03B, F04, F05, F06, F07, F08, F09, F10]
+  fixed_timestamps_and_ids: true
+  deterministic_outputs: true
+  auto_refresh_goldens: FORBIDDEN
+  golden_change_requires_explicit_adjudication: true
+  real_private_operational_data_in_public_repo: FORBIDDEN
+
+change_control:
+  semantic_spec_defect_found:
+    action: STOP_AND_REPORT_DEVIATION
+    implementation_status: BLOCKED_SPEC_CONFLICT
+    forbidden_remediation: MODIFY_FROZEN_SEMANTICS_INSIDE_IMPLEMENTATION_PR
+    required_followup: NEW_DESIGN_REVISION_PLUS_AUDIT_BEFORE_RESUME
+  implementation_detail_issue:
+    action: FIX_WITHIN_P01_IF_NO_SEMANTIC_CHANGE
+  new_runtime_dependency_needed:
+    action: STOP_AND_REQUEST_PACKAGE_DEVIATION_REVIEW
+  new_provider_or_workflow_adapter_needed:
+    action: DEFER_TO_LATER_PACKAGE
+
+required_deliverables:
+  - pyproject.toml
+  - src/ai_control_kernel/
+  - tests/fixtures/F01 through F10 including F03A and F03B variants
+  - tests/unit_and_invariant_suites
+  - exact golden outputs
+  - .github/workflows/ci.yml
+  - reproducible dependency lock_or_constraints_artifact
+  - implementation README documenting commands and architecture boundaries
+  - PR summary mapping each frozen contract to implementation and tests
+  - deviation report only if a frozen-spec conflict is discovered
+
+acceptance_gate:
+  name: ACK_IMPL_P01_ACCEPTED
+  requires:
+    - no modifications to frozen_paths_read_only_during_p01
+    - all quality_gates pass on both supported Python versions
+    - all F01-F10 golden regressions pass without auto-refresh
+    - all frozen predicate references resolve exactly once
+    - every frozen state-machine edge references valid statuses operations writers and predicates
+    - all public fixtures pass privacy scan by reviewer
+    - core imports contain no forbidden provider workflow agent database or web dependencies
+    - independent reviewer confirms no semantic broadening or silent fallback
+    - package produces no production side effects
+    - merge commit is recorded back into parent control task lineage
+
+post_merge_state:
+  implementation_candidate_only: true
+  production_ready: false
+  next_package: PRIVATE_SHADOW_E2E_OR_ADAPTER_PACKAGE_AFTER_INDEPENDENT_REVIEW
+  production_cutover_requires_separate_authority: true
