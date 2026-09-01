@@ -1,0 +1,133 @@
+schema_version: ack.capsule_lifecycle.v0.1
+status: DESIGN_SPEC
+permission_policy: spec/v0.1/permission_policy.yaml
+
+capsule_types:
+  CandidateCapsule:
+    purpose: pre_claim_compiled_execution_candidate
+    executable: false
+    authority_effect: none
+    required_state:
+      authority_resolution: UNIQUE
+      execution_permission_result: ALLOW
+      execution_permission_risk_mode: [GREEN, AMBER]
+    binds:
+      - policy_revision
+      - permission_policy_revision
+      - state_machine_revision
+      - status_normalization_revision
+      - project_state_revision
+      - task_authority_revision
+      - package_authority_revision
+      - input_identity_requirements
+      - role
+      - objective
+      - allowed_actions
+      - forbidden_actions
+      - required_capabilities
+      - acceptance_gate
+    claim_fields:
+      claim_id: null
+      lease_revision: null
+    invalidates_on:
+      - any_bound_source_revision_change
+      - policy_epoch_change
+      - permission_policy_revision_change
+      - state_machine_revision_change
+      - status_normalization_revision_change
+      - relevant_artifact_identity_change
+
+  ExecutionCapsule:
+    purpose: post_claim_claim_bound_execution_view
+    executable: true
+    authority_effect: derived_view_only
+    derived_from: CandidateCapsule
+    requires_verified_claim: true
+    binds_additionally:
+      - claim_id
+      - claimant
+      - lease_revision_or_expected_claim_revision
+      - claim_observed_source_ref
+      - execution_idempotency_key
+      - claim_verification_decision_id
+    invalidates_on:
+      - any_candidate_invalidation
+      - claim_released
+      - claim_expired
+      - claim_reassigned
+      - lease_revision_change
+      - conflicting_claim_observed
+
+lifecycle:
+  - step: COMPILE_CANDIDATE
+    actor: KERNEL_COMPILER
+    input: [EffectiveState, TransitionDecision]
+    precondition:
+      operation_class: EXECUTE_AND_CHECKPOINT
+      decision_result: ALLOW
+    output: CandidateCapsule
+    production_state_mutation: false
+  - step: EXTERNAL_CLAIM_ACQUISITION
+    actor: DISPATCHER_CLAIM_MANAGER
+    input: CandidateCapsule
+    output: ClaimObservation
+    kernel_v0_1_performs_step: false
+  - step: VERIFY_CLAIM
+    actor: KERNEL_VALIDATOR
+    input: [CandidateCapsule, ClaimObservation, current_source_revisions]
+    output: TransitionDecision
+    required_operation_class: CLAIM_EXECUTION_UNIT
+    required_result: ALLOW
+  - step: COMPILE_EXECUTION_CAPSULE
+    actor: KERNEL_COMPILER
+    input: [CandidateCapsule, verified_ClaimObservation, claim_TransitionDecision]
+    output: ExecutionCapsule
+    production_state_mutation: false
+  - step: EXECUTOR_PRESTART_REVALIDATION
+    actor: EXECUTOR_OR_LAUNCH_ADAPTER
+    input: [ExecutionCapsule, current_source_revisions, current_claim]
+    required_checks:
+      - all_bound_revisions_unchanged
+      - claim_still_current
+      - execution_operation_permission_still_allows
+    failure_action: REJECT_CAPSULE_AND_RETURN_TO_RECONCILIATION
+  - step: EXECUTE_BOUNDED_UNIT
+    actor: PRODUCER_EXECUTOR
+    input: ExecutionCapsule
+    allowed_only_after: EXECUTOR_PRESTART_REVALIDATION_PASS
+
+hard_rules:
+  candidate_capsule_never_authorizes_execution: true
+  execution_capsule_is_not_independent_task_truth: true
+  dispatcher_is_not_kernel_core_in_v0_1: true
+  claim_acquisition_requires_external_owner: DISPATCHER_CLAIM_MANAGER
+  capsule_cannot_self_refresh_after_source_change: true
+  source_change_requires_recompile_from_authority: true
+  executor_must_not_continue_on_stale_capsule: true
+  active_tokens_or_secret_codes_not_embedded_as_authority: true
+
+idempotency:
+  candidate_compilation:
+    same_bound_inputs_same_canonical_semantic_payload: true
+  execution_binding:
+    same_candidate_same_verified_claim_same_idempotency_key: NOOP_IDEMPOTENT
+    same_idempotency_key_different_claim_or_payload: DENY
+
+required_provenance:
+  CandidateCapsule:
+    - source_revisions
+    - permission_policy_revision
+    - state_machine_revision
+    - status_normalization_revision
+    - field_level_provenance
+  ExecutionCapsule:
+    - candidate_capsule_id
+    - candidate_payload_hash
+    - claim_source_ref
+    - claim_revision
+    - claim_verification_decision_id
+
+v0_1_shadow_rule:
+  real_claim_required_for_public_fixture_execution_capsule: false
+  fixture_claim_observation_may_be_synthetic: true
+  production_dispatch_enabled: false

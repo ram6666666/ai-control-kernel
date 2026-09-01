@@ -1,0 +1,66 @@
+schema_version: ack.status_normalization.v0.1
+registry_id: core-status-normalization
+status: DESIGN_SPEC
+
+precedence:
+  - exact_project_task_namespace_mapping
+  - exact_project_namespace_mapping
+  - exact_global_mapping
+  - UNKNOWN
+
+rules:
+  unknown_raw_status: UNKNOWN
+  fuzzy_matching_forbidden: true
+  case_normalization: NONE
+  whitespace_normalization: TRIM_ONLY
+  timestamp_or_filename_heuristics_forbidden: true
+  project_extension_must_be_explicit: true
+  project_extension_may_broaden_core_permissions: false
+
+mappings:
+  global:
+    PLANNING: PLANNING
+    WAITING_PLANNING_CONVERSATION: PLANNING
+    PLANNING_ACTIVE: PLANNING
+    PLAN_FROZEN_PENDING_RELEASE: PLANNING
+    READY: READY
+    ACTIVE_PACKAGE_QUEUE: READY
+    CLAIMED: CLAIMED
+    RUNNING: RUNNING
+    BLOCKED: BLOCKED
+    BLOCKED_INPUT_ACCESS: BLOCKED
+    BLOCKED_INPUT_INTEGRITY: BLOCKED
+    BLOCKED_STORAGE_OR_CONNECTOR: BLOCKED
+    WAITING_EXTERNAL: WAITING_EXTERNAL
+    WAITING_EXTERNAL_CLAUDE_REVIEW: WAITING_EXTERNAL
+    WAITING_USER: WAITING_USER
+    WAITING_USER_DECISION: WAITING_USER
+    ARTIFACT_READY: ARTIFACT_READY
+    AUDIT_READY_VERIFIED: AUDIT_PENDING
+    AUDIT_ACTIVE: AUDIT_PENDING
+    AUDIT_PENDING: AUDIT_PENDING
+    REVISION_REQUIRED: REVISION_REQUIRED
+    COMPLETE_AUDITED_REVISION_REQUIRED: REVISION_REQUIRED
+    VERIFIED: VERIFIED
+    VERIFIED_LIVE: VERIFIED
+    COMPLETE_VERIFIED: VERIFIED
+    ACCEPTED: ACCEPTED
+    COMPLETE: COMPLETE
+    COMPLETE_VERIFIED_LIVE: COMPLETE
+    SUPERSEDED: SUPERSEDED
+    SUPERSEDED_BY_SHARED_WORKER_POOL_QUEUE: SUPERSEDED
+    REJECTED: REJECTED
+    QUARANTINED: QUARANTINED
+    CANCELLED: CANCELLED
+
+namespace_extensions: []
+
+extension_schema:
+  namespace: string
+  version: string
+  owner_class: string
+  exact_mappings: object
+  rationale_pointer: string
+  may_override_global_mapping: true
+  override_requires_explicit_raw_status_key: true
+  may_change_semantic_meaning_without_authority: false

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-control-kernel:schema:predicate-registry:v0.1",
+  "title": "AI Control Kernel Predicate Registry v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "contract", "predicates"],
+  "properties": {
+    "schema_version": {"const": "ack.predicate_registry.v0.1"},
+    "status": {"type": "string"},
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["arbitrary_expression_evaluation_forbidden", "unknown_predicate_id_result", "every_check_returns_evidence"],
+      "properties": {
+        "arbitrary_expression_evaluation_forbidden": {"const": true},
+        "unknown_predicate_id_result": {"const": "DENY_OR_DESIGN_ERROR"},
+        "every_check_returns_evidence": {"const": true}
+      }
+    },
+    "predicates": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^P_[A-Z0-9_]+$"},
+      "additionalProperties": {
+        "type": "object",
+        "required": ["evaluator", "input_fields"],
+        "properties": {
+          "evaluator": {"type": "string", "minLength": 1},
+          "input_fields": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "pass_when": {},
+          "pass_when_all_status_in": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
