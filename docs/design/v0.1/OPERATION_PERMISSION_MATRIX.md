@@ -13,7 +13,8 @@ Therefore v0.1 separates:
 
 1. **observed conditions** — facts such as stale metadata, authority conflict, missing telemetry, or hash mismatch;
 2. **state summary** — a conservative summary of known mechanical health;
-3. **operation decision** — the risk classification and permission for one requested operation.
+3. **operation decision** — the risk classification and permission for one requested operation;
+4. **semantic-review conditions** — unresolved questions that software must surface rather than guess.
 
 `TransitionDecision.risk_mode` is operation-scoped. It is not merely copied from a global health flag.
 
@@ -47,7 +48,7 @@ Initial AMBER condition codes:
 
 AMBER must carry the exact condition codes. It is never a generic "probably fine" state.
 
-### RED conditions
+### RED mechanical conditions
 
 RED is a hard mechanical blocker for ordinary execution/promotion when relevant to the requested operation.
 
@@ -66,9 +67,19 @@ Initial RED condition codes:
 | `R_MISSING_AUTHORIZATION` | required production/implementation/promotion authorization absent |
 | `R_ROLE_WRITE_VIOLATION` | actor does not own/delegated-write the target surface |
 | `R_REQUIRED_GATE_MISSING` | required audit, dependency, acceptance, or publication gate missing |
-| `R_SEMANTIC_AMBIGUITY` | a decision would require semantic interpretation outside deterministic authority |
 
-`R_SEMANTIC_AMBIGUITY` normally yields `SEMANTIC_REVIEW_REQUIRED` rather than an automated repair.
+### Semantic-review conditions
+
+Semantic-review conditions are not mechanically "repaired" and should not be disguised as AMBER permission.
+
+| Code | Condition |
+|---|---|
+| `S_AUTHORITY_MEANING_AMBIGUOUS` | textual/legacy records cannot be ranked without interpreting intended meaning |
+| `S_SCOPE_CHANGE_AMBIGUOUS` | requested change may materially rescope project/task semantics |
+| `S_REQUIREMENT_CONFLICT` | two requirements appear semantically inconsistent and no declared precedence rule resolves them |
+| `S_ACCEPTANCE_JUDGMENT_REQUIRED` | adequacy/correctness/value judgment is intentionally human/AI semantic review |
+
+For an operation that requires the unresolved semantic decision, return `SEMANTIC_REVIEW_REQUIRED`. Its `risk_mode` is RED when ordinary execution of that operation must stay blocked pending review.
 
 ## 3. Operation classes
 
@@ -125,11 +136,11 @@ If relevance cannot be determined mechanically, return `SEMANTIC_REVIEW_REQUIRED
 
 ## 6. Examples from current incidents
 
-### Stale GP05 metadata while GP06 authority is uniquely resolved
+### Stale copied policy metadata while current authority is uniquely resolved
 
 - `READ_DIAGNOSE`: ALLOW / AMBER.
 - `SHADOW_VALIDATE`: ALLOW_WITH_WARNINGS.
-- `EXECUTE_AND_CHECKPOINT`: may be ALLOW if active GP06 fingerprint/binding and task/package authority are independently verified and the stale field is copied metadata only.
+- `EXECUTE_AND_CHECKPOINT`: may be ALLOW if active fingerprint/binding and task/package authority are independently verified and the stale field is copied metadata only.
 - `PROMOTE_OR_ACCEPT_CANONICAL`: only if the operation-specific gate explicitly does not rely on the stale field; otherwise DENY/REVIEW.
 
 ### Scheduler launch with no first durable receipt and no side effects
@@ -161,19 +172,20 @@ Examples:
 - whether two textual requirements conflict in meaning;
 - whether a noncanonical working artifact is adequate for a human decision.
 
-The kernel must output the exact unresolved question and relevant sources. It must not convert semantic uncertainty into AMBER permission.
+The kernel must output the exact unresolved question, semantic condition code and relevant sources. It must not convert semantic uncertainty into AMBER permission.
 
 ## 8. Decision output requirements
 
 For every operation decision, emit:
 
 ```yaml
-operation:
+operation_class:
 result: ALLOW | DENY | SEMANTIC_REVIEW_REQUIRED | NOOP_IDEMPOTENT
 risk_mode: GREEN | AMBER | RED
-observed_conditions: []
-blocking_conditions: []
-nonblocking_warnings: []
+observed_condition_codes: []
+blocking_condition_codes: []
+nonblocking_warning_codes: []
+semantic_condition_codes: []
 required_sources: []
 checks: []
 writer_owner_check:
