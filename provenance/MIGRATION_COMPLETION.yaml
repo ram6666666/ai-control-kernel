@@ -1,0 +1,38 @@
+schema_version: 0.1
+migration_id: ACK-MIGRATION-20260901-INITIAL
+event: MIGRATION_COMPLETE_VERIFIED
+recorded_at_utc: 2026-09-01T19:42:00Z
+
+new_repository:
+  repository: ram6666666/ai-control-kernel
+  canonical_ref: main
+  migration_pr: 1
+  migration_merge_commit: 77a41115be05b0c01b2f086e74307898abc3cc3d
+  provenance_manifest: provenance/MIGRATION_ORIGIN.yaml
+
+exact_import_verification:
+  docs/design/v0.1/DESIGN_BRIEF.md: 4d9152dd0a0a25c69283f55f8e58d0d4dd378ba1
+  docs/design/v0.1/MACHINE_CONTRACTS.md: 6effa577b0bad67a6268d228c16af11767e7e833
+  docs/design/v0.1/CONTROL_SURFACE_MAP.md: b2f8f52689a7cba607f0eb01970ba43a4e5eb728
+  all_match_origin_git_blob_sha: true
+
+old_repository_wiring:
+  repository: ram6666666/ai-
+  integration_pointer_path: ai-control/INTEGRATIONS/AI_CONTROL_KERNEL.yaml
+  integration_pointer_blob_sha_readback: 09516d1b5ab8ef2b5b1b737f1172c802c175b8a8
+  integration_pointer_commit: 6dcfb404f51f9d964122a1f7d11d15287014b992
+  control_task_path: ai-control/CONTROL_TASKS/AI_CONTROL_KERNEL_V0_1.yaml
+  control_task_blob_sha_readback: 19ab990a7e3fc74d878dfc3522d3834a75378701
+  control_task_update_commit: 4d177d498403690b5455e153d63c7f1e757d1e08
+
+final_authority_split:
+  global_policy_and_cross_project_control: ram6666666/ai-
+  current_control_task_lineage: ram6666666/ai-:ai-control/CONTROL_TASKS/AI_CONTROL_KERNEL_V0_1.yaml
+  kernel_engineering_design_code_tests_releases: ram6666666/ai-control-kernel
+  dual_peer_authority: FORBIDDEN
+
+implementation_authorized: false
+production_cutover_authorized: false
+work_required_for_migration: false
+codex_required_for_migration: false
+next_engineering_unit: OPERATION_SPECIFIC_RISK_PERMISSION_MATRIX_AND_GOLDEN_FIXTURE_PLAN
