@@ -1,9 +1,11 @@
 schema_version: ack.implementation_package.v0.1
 package_id: ACK-IMPL-P01
 title: Pure deterministic core plus sanitized local fixtures
-status: REVIEW_CANDIDATE
+status: FROZEN_READY_FOR_EXECUTOR
 package_class: BOUNDED_IMPLEMENTATION
 created_at_utc: 2026-09-01T21:34:53Z
+frozen_at_utc: 2026-09-01T21:34:53Z
+package_review: provenance/reviews/ACK-IMPL-P01-PACKAGE-REVIEW.yaml
 production_cutover_authorized: false
 production_state_write_authorized: false
 
@@ -76,7 +78,7 @@ scope:
     - implement SHA-256 and byte-size identity from actual binary streams only
     - implement filesystem and fixture adapters only
     - create sanitized F01-F10 fixture directories and exact golden outputs
-    - create unit, negative, invariant and golden-regression tests
+    - create unit negative invariant and golden-regression tests
     - create CI and project packaging metadata
   explicitly_excluded:
     - GitHub production adapter
