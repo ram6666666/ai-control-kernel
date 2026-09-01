@@ -4,71 +4,87 @@
   "title": "AI Control Kernel Permission Policy v0.1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "policy_id", "status", "predicate_registry", "condition_registry", "results", "outcome_semantics", "operation_defaults", "condition_rules", "semantic_review", "evaluation_order"],
+  "required": ["schema_version", "policy_id", "status", "predicate_registry", "condition_registry", "combination_rules", "base_by_operation", "condition_overrides", "semantic_review"],
   "properties": {
     "schema_version": {"const": "ack.permission_policy.v0.1"},
     "policy_id": {"type": "string", "minLength": 1},
     "status": {"type": "string"},
     "predicate_registry": {"type": "string", "minLength": 1},
     "condition_registry": {"type": "string", "minLength": 1},
-    "results": {"type": "object", "minProperties": 4, "additionalProperties": {"type": "string"}},
-    "outcome_semantics": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "object"}},
-    "operation_defaults": {
-      "type": "object",
-      "required": ["READ_DIAGNOSE", "DISCUSS_PLAN", "SHADOW_VALIDATE", "WRITE_DIAGNOSTIC_EVIDENCE", "PRODUCE_NONCANONICAL_WORKING_ARTIFACT", "CLAIM_EXECUTION_UNIT", "EXECUTE_AND_CHECKPOINT", "PUBLISH_AUTHORITATIVE_ARTIFACT", "ISSUE_INDEPENDENT_AUDIT_VERDICT", "MUTATE_CONTROL_STATE", "PROMOTE_OR_ACCEPT_CANONICAL", "LIVENESS_REPAIR", "POLICY_RECONCILIATION"],
-      "additionalProperties": {"$ref": "#/$defs/RiskDefault"}
-    },
-    "condition_rules": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/ConditionRule"}},
-    "semantic_review": {
-      "type": "object",
-      "required": ["codes", "result", "ordinary_authority_effect_allowed", "allowed_operations_without_authority_effect"],
-      "properties": {
-        "codes": {"type": "array", "minItems": 1, "items": {"enum": ["S_AUTHORITY_MEANING_AMBIGUOUS", "S_SCOPE_CHANGE_AMBIGUOUS", "S_REQUIREMENT_CONFLICT", "S_ACCEPTANCE_JUDGMENT_REQUIRED"]}, "uniqueItems": true},
-        "result": {"const": "SEMANTIC_REVIEW_REQUIRED"},
-        "ordinary_authority_effect_allowed": {"const": false},
-        "allowed_operations_without_authority_effect": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
-      },
-      "additionalProperties": false
-    },
-    "evaluation_order": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true}
-  },
-  "$defs": {
-    "OutcomeToken": {
-      "enum": ["ALLOW", "DENY", "ALLOW_WITH_WARNINGS", "RECOVERY_SCOPE_ONLY", "NO_AUTHORITY_EFFECT_ONLY", "DIAGNOSTIC_ONLY", "RECOVERY_ROLE_ONLY", "EVALUATE_CONDITIONS", "REQUIRE_ROLE_AND_PREDICATES", "NOOP_OR_VALIDATE", "ALLOW_IF_PREDICATES", "DENY_UNLESS_EXPLICITLY_IRRELEVANT"]
-    },
-    "RiskDefault": {
+    "combination_rules": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["green", "amber", "red"],
+      "required": ["unknown_operation", "unknown_condition_code", "semantic_condition_precedence", "mechanical_condition_merge", "decision_order", "predicate_failure", "empty_condition_set_uses_base"],
       "properties": {
-        "green": {"$ref": "#/$defs/OutcomeToken"},
-        "amber": {"$ref": "#/$defs/OutcomeToken"},
-        "red": {"$ref": "#/$defs/OutcomeToken"}
+        "unknown_operation": {"enum": ["SEMANTIC_REVIEW_REQUIRED", "DENY"]},
+        "unknown_condition_code": {"const": "DENY"},
+        "semantic_condition_precedence": {"const": "BEFORE_MECHANICAL_PERMISSION"},
+        "mechanical_condition_merge": {"const": "MOST_RESTRICTIVE"},
+        "decision_order": {"type": "array", "items": {"enum": ["DENY", "SEMANTIC_REVIEW_REQUIRED", "ALLOW", "NOOP_IDEMPOTENT"]}, "uniqueItems": true},
+        "predicate_failure": {"const": "DENY"},
+        "empty_condition_set_uses_base": {"const": true}
       }
     },
-    "ConditionalOutcome": {
+    "base_by_operation": {
       "type": "object",
-      "required": ["result"],
-      "properties": {
-        "result": {"$ref": "#/$defs/OutcomeToken"},
-        "require_predicates": {"type": "array", "items": {"pattern": "^P_[A-Z0-9_]+$"}, "uniqueItems": true}
-      },
-      "additionalProperties": false
+      "required": ["READ_DIAGNOSE", "DISCUSS_PLAN", "SHADOW_VALIDATE", "WRITE_DIAGNOSTIC_EVIDENCE", "PRODUCE_NONCANONICAL_WORKING_ARTIFACT", "CLAIM_EXECUTION_UNIT", "EXECUTE_AND_CHECKPOINT", "PUBLISH_AUTHORITATIVE_ARTIFACT", "ISSUE_INDEPENDENT_AUDIT_VERDICT", "MUTATE_CONTROL_STATE", "PROMOTE_OR_ACCEPT_CANONICAL", "LIVENESS_REPAIR", "POLICY_RECONCILIATION"],
+      "additionalProperties": {"$ref": "#/$defs/RiskRules"}
     },
-    "ConditionRule": {
+    "condition_overrides": {
       "type": "object",
-      "required": ["default_risk"],
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/ConditionOverride"}
+    },
+    "semantic_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["codes", "when_relevant_to_requested_authority_effect", "authority_effect_allowed_while_unresolved", "no_authority_effect_operations_allowed"],
       "properties": {
-        "default_risk": {"enum": ["AMBER", "RED"]},
-        "allow_operations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "deny_operations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-        "conditional_operations": {"type": "object", "additionalProperties": {"$ref": "#/$defs/ConditionalOutcome"}},
-        "require_predicates": {"type": "array", "items": {"pattern": "^P_[A-Z0-9_]+$"}, "uniqueItems": true},
-        "canonical_promotion": {"$ref": "#/$defs/ConditionalOutcome"},
-        "deny_ordinary_execution": {"type": "boolean"},
-        "recovery_operations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        "codes": {"type": "array", "minItems": 1, "items": {"enum": ["S_AUTHORITY_MEANING_AMBIGUOUS", "S_SCOPE_CHANGE_AMBIGUOUS", "S_REQUIREMENT_CONFLICT", "S_ACCEPTANCE_JUDGMENT_REQUIRED"]}, "uniqueItems": true},
+        "when_relevant_to_requested_authority_effect": {"const": "SEMANTIC_REVIEW_REQUIRED"},
+        "authority_effect_allowed_while_unresolved": {"const": false},
+        "no_authority_effect_operations_allowed": {"type": "array", "items": {"enum": ["READ_DIAGNOSE", "DISCUSS_PLAN"]}, "uniqueItems": true}
+      }
+    }
+  },
+  "$defs": {
+    "DecisionResult": {"enum": ["ALLOW", "DENY", "NOOP_IDEMPOTENT"]},
+    "EffectScope": {"enum": ["NONE", "READ_ONLY", "NO_AUTHORITY_EFFECT", "SHADOW_ONLY", "DIAGNOSTIC_ONLY", "NONCANONICAL_ONLY", "CLAIM_ONLY", "BOUNDED_EXECUTION", "AUTHORITATIVE_PUBLICATION", "AUDIT_VERDICT_ONLY", "DECLARED_STATE_FIELDS_ONLY", "CANONICAL_PROMOTION", "LIVENESS_ONLY", "POLICY_RECONCILIATION_ONLY", "RECOVERY_ONLY"]},
+    "DecisionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "effect_scope"],
+      "properties": {
+        "mode": {"enum": ["DIRECT", "PREDICATE_GATE"]},
+        "result": {"$ref": "#/$defs/DecisionResult"},
+        "predicates": {"type": "array", "items": {"pattern": "^P_[A-Z0-9_]+$"}, "uniqueItems": true},
+        "on_pass": {"$ref": "#/$defs/DecisionResult"},
+        "on_fail": {"const": "DENY"},
+        "effect_scope": {"$ref": "#/$defs/EffectScope"}
       },
-      "additionalProperties": false
+      "allOf": [
+        {"if": {"properties": {"mode": {"const": "DIRECT"}}}, "then": {"required": ["result"], "not": {"anyOf": [{"required": ["predicates"]}, {"required": ["on_pass"]}, {"required": ["on_fail"]}]}}},
+        {"if": {"properties": {"mode": {"const": "PREDICATE_GATE"}}}, "then": {"required": ["predicates", "on_pass", "on_fail"], "not": {"required": ["result"]}}}
+      ]
+    },
+    "RiskRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["GREEN", "AMBER", "RED"],
+      "properties": {
+        "GREEN": {"$ref": "#/$defs/DecisionRule"},
+        "AMBER": {"$ref": "#/$defs/DecisionRule"},
+        "RED": {"$ref": "#/$defs/DecisionRule"}
+      }
+    },
+    "ConditionOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk", "operation_overrides"],
+      "properties": {
+        "risk": {"enum": ["AMBER", "RED"]},
+        "operation_overrides": {"type": "object", "additionalProperties": {"$ref": "#/$defs/DecisionRule"}}
+      }
     }
   }
 }
