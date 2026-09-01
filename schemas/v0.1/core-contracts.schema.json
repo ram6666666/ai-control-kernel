@@ -133,14 +133,23 @@
       "properties": {
         "schema_version": {"const": "ack.candidate_capsule.v0.1"},
         "capsule_type": {"const": "CANDIDATE"},
-        "capsule_id": {"type": "string"},
+        "capsule_id": {"type": "string", "minLength": 1},
         "compiled_at": {"type": "string", "format": "date-time"},
         "source_revisions": {"type": "object"},
         "identity": {"type": "object"},
         "execution": {"type": "object"},
         "inputs": {"type": "object"},
         "outputs": {"type": "object"},
-        "concurrency": {"type": "object", "required": ["claim_id", "lease_or_expected_revision", "idempotency_key"], "properties": {"claim_id": {"type": "null"}, "lease_or_expected_revision": {"type": "null"}, "idempotency_key": {"type": "string"}}, "additionalProperties": false},
+        "concurrency": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["claim_id", "lease_or_expected_revision", "idempotency_key"],
+          "properties": {
+            "claim_id": {"type": "null"},
+            "lease_or_expected_revision": {"type": "null"},
+            "idempotency_key": {"type": "string", "minLength": 1}
+          }
+        },
         "acceptance": {"type": "object"},
         "capabilities": {"type": "object"},
         "integrity": {"type": "object"},
@@ -148,27 +157,38 @@
       }
     },
     "ExecutionCapsule": {
-      "allOf": [
-        {"$ref": "#/$defs/CandidateCapsule"},
-        {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "capsule_type", "capsule_id", "candidate_capsule_id", "candidate_payload_hash", "compiled_at", "source_revisions", "identity", "execution", "inputs", "outputs", "concurrency", "acceptance", "capabilities", "integrity", "provenance_trace"],
+      "properties": {
+        "schema_version": {"const": "ack.execution_capsule.v0.1"},
+        "capsule_type": {"const": "EXECUTION"},
+        "capsule_id": {"type": "string", "minLength": 1},
+        "candidate_capsule_id": {"type": "string", "minLength": 1},
+        "candidate_payload_hash": {"type": "string", "minLength": 1},
+        "compiled_at": {"type": "string", "format": "date-time"},
+        "source_revisions": {"type": "object"},
+        "identity": {"type": "object"},
+        "execution": {"type": "object"},
+        "inputs": {"type": "object"},
+        "outputs": {"type": "object"},
+        "concurrency": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["claim_id", "claimant", "lease_or_expected_revision", "idempotency_key", "claim_source"],
           "properties": {
-            "schema_version": {"const": "ack.execution_capsule.v0.1"},
-            "capsule_type": {"const": "EXECUTION"},
-            "concurrency": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["claim_id", "claimant", "lease_or_expected_revision", "idempotency_key", "claim_source"],
-              "properties": {
-                "claim_id": {"type": "string", "minLength": 1},
-                "claimant": {"type": "string", "minLength": 1},
-                "lease_or_expected_revision": {"type": "string", "minLength": 1},
-                "idempotency_key": {"type": "string", "minLength": 1},
-                "claim_source": {"$ref": "#/$defs/SourceRef"}
-              }
-            }
+            "claim_id": {"type": "string", "minLength": 1},
+            "claimant": {"type": "string", "minLength": 1},
+            "lease_or_expected_revision": {"type": "string", "minLength": 1},
+            "idempotency_key": {"type": "string", "minLength": 1},
+            "claim_source": {"$ref": "#/$defs/SourceRef"}
           }
-        }
-      ]
+        },
+        "acceptance": {"type": "object"},
+        "capabilities": {"type": "object"},
+        "integrity": {"type": "object"},
+        "provenance_trace": {"type": "object"}
+      }
     }
   },
   "oneOf": [
