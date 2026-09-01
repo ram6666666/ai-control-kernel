@@ -1,5 +1,6 @@
 schema_version: ack.capsule_lifecycle.v0.1
 status: DESIGN_SPEC
+permission_policy: spec/v0.1/permission_policy.yaml
 
 capsule_types:
   CandidateCapsule:
@@ -8,9 +9,13 @@ capsule_types:
     authority_effect: none
     required_state:
       authority_resolution: UNIQUE
-      ordinary_execution_operation_decision: [GREEN, AMBER_ALLOWED]
+      execution_permission_result: ALLOW
+      execution_permission_risk_mode: [GREEN, AMBER]
     binds:
       - policy_revision
+      - permission_policy_revision
+      - state_machine_revision
+      - status_normalization_revision
       - project_state_revision
       - task_authority_revision
       - package_authority_revision
@@ -29,6 +34,7 @@ capsule_types:
       - policy_epoch_change
       - permission_policy_revision_change
       - state_machine_revision_change
+      - status_normalization_revision_change
       - relevant_artifact_identity_change
 
   ExecutionCapsule:
@@ -43,6 +49,7 @@ capsule_types:
       - lease_revision_or_expected_claim_revision
       - claim_observed_source_ref
       - execution_idempotency_key
+      - claim_verification_decision_id
     invalidates_on:
       - any_candidate_invalidation
       - claim_released
@@ -54,7 +61,10 @@ capsule_types:
 lifecycle:
   - step: COMPILE_CANDIDATE
     actor: KERNEL_COMPILER
-    input: EffectiveState
+    input: [EffectiveState, TransitionDecision]
+    precondition:
+      operation_class: EXECUTE_AND_CHECKPOINT
+      decision_result: ALLOW
     output: CandidateCapsule
     production_state_mutation: false
   - step: EXTERNAL_CLAIM_ACQUISITION
@@ -66,10 +76,11 @@ lifecycle:
     actor: KERNEL_VALIDATOR
     input: [CandidateCapsule, ClaimObservation, current_source_revisions]
     output: TransitionDecision
+    required_operation_class: CLAIM_EXECUTION_UNIT
     required_result: ALLOW
   - step: COMPILE_EXECUTION_CAPSULE
     actor: KERNEL_COMPILER
-    input: [CandidateCapsule, verified_ClaimObservation]
+    input: [CandidateCapsule, verified_ClaimObservation, claim_TransitionDecision]
     output: ExecutionCapsule
     production_state_mutation: false
   - step: EXECUTOR_PRESTART_REVALIDATION
@@ -78,7 +89,7 @@ lifecycle:
     required_checks:
       - all_bound_revisions_unchanged
       - claim_still_current
-      - operation_permission_still_allows_execution
+      - execution_operation_permission_still_allows
     failure_action: REJECT_CAPSULE_AND_RETURN_TO_RECONCILIATION
   - step: EXECUTE_BOUNDED_UNIT
     actor: PRODUCER_EXECUTOR
@@ -97,10 +108,10 @@ hard_rules:
 
 idempotency:
   candidate_compilation:
-    same_inputs_same_canonical_payload_except_generated_metadata: true
+    same_bound_inputs_same_canonical_semantic_payload: true
   execution_binding:
-    same_candidate_same_verified_claim_same_idempotency_key: NOOP_IDEMPOTENT_ALLOWED
-    same_idempotency_key_different_claim_or_payload: DENY_CONFLICT
+    same_candidate_same_verified_claim_same_idempotency_key: NOOP_IDEMPOTENT
+    same_idempotency_key_different_claim_or_payload: DENY
 
 required_provenance:
   CandidateCapsule:
