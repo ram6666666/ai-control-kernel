@@ -1,9 +1,11 @@
-schema_version: 0.2
+schema_version: 0.3
 migration_id: ACK-MIGRATION-20260901-INITIAL
-status: VERIFIED_BRANCH
+status: TARGET_MAIN_MERGED_VERIFIED
 started_at_utc: 2026-09-01T19:32:55Z
 target_repository: ram6666666/ai-control-kernel
-target_branch: migration/initial-design-import
+target_branch: main
+migration_pr: 1
+migration_merge_commit: 77a41115be05b0c01b2f086e74307898abc3cc3d
 
 origin:
   repository: ram6666666/ai-
@@ -35,15 +37,17 @@ new_repo_native_design_decisions:
   - path: docs/architecture/INTEGRATION_FIRST.md
     provenance: user decision at 2026-09-01T19:28:44Z plus control-conversation normalization
 
-canonical_split_during_migration:
+canonical_split:
   standalone_repo:
-    role: TARGET_CANONICAL_FOR_KERNEL_ENGINEERING_DESIGN_CODE_SCHEMAS_TESTS_RELEASES_AFTER_VERIFICATION
+    role: CANONICAL_KERNEL_ENGINEERING_DESIGN_CODE_SCHEMAS_TESTS_RELEASES
+    implementation_authorized: false
+    production_cutover_authorized: false
   old_ai_repo:
     role: GLOBAL_AI_CONTROL_PLANE_AND_CURRENT_CONTROL_TASK_LINEAGE
     remains_global_policy_authority: true
-    remains_control_task_authority_initially: true
+    remains_control_task_authority: true
 
-forbidden_during_migration:
+forbidden:
   - dual_peer_task_authority
   - implementation_without_design_freeze
   - production_cutover
@@ -53,10 +57,11 @@ forbidden_during_migration:
 verification:
   imported_design_blob_shas_match_origin: true
   target_files_read_back: true
-  migration_pr_merged: false
+  migration_pr_merged: true
+  target_main_merge_sha_recorded: true
   old_repo_integration_pointer_created: false
   old_control_task_updated_last: false
 
-next_step: OPEN_AND_VERIFY_MIGRATION_PR_THEN_MERGE
+next_step: CREATE_OLD_REPO_INTEGRATION_POINTER_THEN_UPDATE_OLD_CONTROL_TASK
 work_required: false
 codex_required: false
