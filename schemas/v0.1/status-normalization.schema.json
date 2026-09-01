@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-control-kernel:schema:status-normalization:v0.1",
+  "title": "AI Control Kernel Status Normalization v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "registry_id", "status", "precedence", "rules", "mappings", "namespace_extensions", "extension_schema"],
+  "properties": {
+    "schema_version": {"const": "ack.status_normalization.v0.1"},
+    "registry_id": {"type": "string", "minLength": 1},
+    "status": {"type": "string"},
+    "precedence": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unknown_raw_status", "fuzzy_matching_forbidden", "case_normalization", "whitespace_normalization", "timestamp_or_filename_heuristics_forbidden", "project_extension_must_be_explicit", "project_extension_may_broaden_core_permissions"],
+      "properties": {
+        "unknown_raw_status": {"const": "UNKNOWN"},
+        "fuzzy_matching_forbidden": {"const": true},
+        "case_normalization": {"const": "NONE"},
+        "whitespace_normalization": {"const": "TRIM_ONLY"},
+        "timestamp_or_filename_heuristics_forbidden": {"const": true},
+        "project_extension_must_be_explicit": {"const": true},
+        "project_extension_may_broaden_core_permissions": {"const": false}
+      }
+    },
+    "mappings": {
+      "type": "object",
+      "required": ["global"],
+      "properties": {
+        "global": {"type": "object", "minProperties": 1, "additionalProperties": {"enum": ["PLANNING", "READY", "CLAIMED", "RUNNING", "BLOCKED", "WAITING_EXTERNAL", "WAITING_USER", "ARTIFACT_READY", "AUDIT_PENDING", "REVISION_REQUIRED", "VERIFIED", "ACCEPTED", "COMPLETE", "SUPERSEDED", "REJECTED", "QUARANTINED", "CANCELLED", "UNKNOWN"]}}
+      },
+      "additionalProperties": false
+    },
+    "namespace_extensions": {"type": "array", "items": {"type": "object"}},
+    "extension_schema": {"type": "object"}
+  }
+}
