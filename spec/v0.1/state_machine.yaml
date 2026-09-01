@@ -1,0 +1,167 @@
+schema_version: ack.state_machine.v0.1
+machine_id: core-lifecycle
+status: DESIGN_SPEC
+owner_class: PACKAGE_CONTROLLER
+normalized_states:
+  - PLANNING
+  - READY
+  - CLAIMED
+  - RUNNING
+  - BLOCKED
+  - WAITING_EXTERNAL
+  - WAITING_USER
+  - ARTIFACT_READY
+  - AUDIT_PENDING
+  - REVISION_REQUIRED
+  - VERIFIED
+  - ACCEPTED
+  - COMPLETE
+  - SUPERSEDED
+  - REJECTED
+  - QUARANTINED
+  - CANCELLED
+  - UNKNOWN
+
+rules:
+  - id: planning_to_ready
+    from: PLANNING
+    to: READY
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PROJECT_TASK_CONTROL
+    require_predicates: [required_gates_present, source_revision_current]
+  - id: ready_to_claimed
+    from: READY
+    to: CLAIMED
+    operation_class: CLAIM_EXECUTION_UNIT
+    writer_owner: DISPATCHER_CLAIM_MANAGER
+    require_predicates: [authority_unique, source_revision_current, no_claim_conflict, writer_owner_valid]
+  - id: claimed_to_running
+    from: CLAIMED
+    to: RUNNING
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [source_revision_current, no_claim_conflict]
+  - id: running_to_artifact_ready
+    from: RUNNING
+    to: ARTIFACT_READY
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [required_integrity_not_false, source_revision_current]
+  - id: artifact_ready_to_audit_pending
+    from: ARTIFACT_READY
+    to: AUDIT_PENDING
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [required_gates_present, source_revision_current]
+  - id: audit_pending_to_verified
+    from: AUDIT_PENDING
+    to: VERIFIED
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [required_gates_present, source_revision_current]
+    evidence_requirements: [independent_audit_pass_when_required]
+  - id: audit_pending_to_revision_required
+    from: AUDIT_PENDING
+    to: REVISION_REQUIRED
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [source_revision_current]
+    evidence_requirements: [audit_revision_required_verdict]
+  - id: revision_required_to_ready
+    from: REVISION_REQUIRED
+    to: READY
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [required_gates_present, source_revision_current]
+  - id: verified_to_accepted
+    from: VERIFIED
+    to: ACCEPTED
+    operation_class: PROMOTE_OR_ACCEPT_CANONICAL
+    writer_owner: PROJECT_TASK_CONTROL
+    require_predicates: [required_gates_present, required_integrity_not_false, source_revision_current]
+  - id: accepted_to_complete
+    from: ACCEPTED
+    to: COMPLETE
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PROJECT_TASK_CONTROL
+    require_predicates: [required_gates_present, source_revision_current]
+  - id: any_active_to_blocked
+    from_set: [PLANNING, READY, CLAIMED, RUNNING, ARTIFACT_READY, AUDIT_PENDING, REVISION_REQUIRED]
+    to: BLOCKED
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [source_revision_current]
+  - id: blocked_to_ready_recovery
+    from: BLOCKED
+    to: READY
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [required_gates_present, source_revision_current]
+    evidence_requirements: [blocker_resolution_evidence]
+  - id: any_active_to_waiting_external
+    from_set: [PLANNING, READY, CLAIMED, RUNNING, ARTIFACT_READY, AUDIT_PENDING, REVISION_REQUIRED]
+    to: WAITING_EXTERNAL
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [source_revision_current]
+  - id: waiting_external_to_ready
+    from: WAITING_EXTERNAL
+    to: READY
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PACKAGE_CONTROLLER
+    require_predicates: [required_gates_present, source_revision_current]
+  - id: any_active_to_waiting_user
+    from_set: [PLANNING, READY, CLAIMED, RUNNING, ARTIFACT_READY, AUDIT_PENDING, REVISION_REQUIRED]
+    to: WAITING_USER
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PROJECT_TASK_CONTROL
+    require_predicates: [source_revision_current]
+  - id: waiting_user_to_ready
+    from: WAITING_USER
+    to: READY
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PROJECT_TASK_CONTROL
+    require_predicates: [required_gates_present, source_revision_current]
+  - id: any_nonterminal_to_cancelled
+    from_set: [PLANNING, READY, CLAIMED, RUNNING, BLOCKED, WAITING_EXTERNAL, WAITING_USER, ARTIFACT_READY, AUDIT_PENDING, REVISION_REQUIRED]
+    to: CANCELLED
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PROJECT_TASK_CONTROL
+    require_predicates: [source_revision_current]
+  - id: any_to_quarantined
+    from_set: [PLANNING, READY, CLAIMED, RUNNING, BLOCKED, WAITING_EXTERNAL, WAITING_USER, ARTIFACT_READY, AUDIT_PENDING, REVISION_REQUIRED, VERIFIED, ACCEPTED]
+    to: QUARANTINED
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: POLICY_RECONCILER
+    require_predicates: [source_revision_current]
+    evidence_requirements: [integrity_or_authority_quarantine_reason]
+  - id: task_to_superseded
+    from_set: [PLANNING, READY, BLOCKED, WAITING_EXTERNAL, WAITING_USER, VERIFIED, ACCEPTED]
+    to: SUPERSEDED
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PROJECT_TASK_CONTROL
+    require_predicates: [source_revision_current]
+    evidence_requirements: [successor_authority_pointer]
+  - id: audit_to_rejected
+    from_set: [AUDIT_PENDING, VERIFIED]
+    to: REJECTED
+    operation_class: MUTATE_CONTROL_STATE
+    writer_owner: PROJECT_TASK_CONTROL
+    require_predicates: [source_revision_current]
+    evidence_requirements: [rejection_or_failed_acceptance_evidence]
+
+terminal_states: [COMPLETE, SUPERSEDED, REJECTED, CANCELLED]
+unknown_state_policy:
+  normalized_state: UNKNOWN
+  ordinary_transition_allowed: false
+  allowed_operations: [READ_DIAGNOSE, DISCUSS_PLAN, SHADOW_VALIDATE]
+
+extension_contract:
+  namespace_required: true
+  version_required: true
+  owner_class_required: true
+  may_add_raw_states: true
+  may_add_explicit_edges: true
+  may_narrow_core_edge: true
+  may_broaden_core_prohibition: false
+  fuzzy_inference_forbidden: true
