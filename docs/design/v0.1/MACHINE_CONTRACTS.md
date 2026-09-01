@@ -92,15 +92,18 @@ claim:
   lease_state: ProvenancedValue | null
 
 health:
-  integrity: GREEN | AMBER | RED
+  mechanical_summary: GREEN | AMBER | RED
   authority_resolution: UNIQUE | AMBIGUOUS | CONFLICT
   semantic_review_required: bool
+  observed_condition_codes: []
   warnings: []
   blockers: []
 
 provenance_trace:
   <field_path>: SourceRef
 ```
+
+`health.mechanical_summary` is a conservative state summary. It is **not** the final permission for every possible operation. Operation permission is computed separately by `TransitionDecision` using the requested operation and relevant conditions.
 
 ### EffectiveState resolution invariants
 
@@ -109,10 +112,33 @@ provenance_trace:
 3. **Global overlay may repair stale copied global metadata only.** It cannot widen project-local permissions, production authorization, scientific scope or acceptance gates.
 4. **Narrowing is monotonic.** A package may narrow a task; a task may narrow a project. A lower-level authority cannot silently broaden a higher-level prohibition.
 5. **Stricter local restrictions survive.** If current project/task/package state imposes a stricter restriction than the global default, the stricter restriction is retained unless an explicit authorized state transition removes it.
-6. **Conflicting same-rank authorities do not resolve by timestamp or filename.** Result is `authority_resolution: CONFLICT` and RED unless a declared reconciliation rule exists.
+6. **Conflicting same-rank authorities do not resolve by timestamp or filename.** Result is `authority_resolution: CONFLICT` and mechanical RED unless a declared reconciliation rule exists.
 7. **Historical text is not active authority merely because it is present in the same file.** Version/supersession metadata must identify the active rule; otherwise return semantic review rather than infer from prose order.
+8. **Semantic uncertainty is represented explicitly.** It must not be hidden inside an AMBER permission or repaired by linguistic guesswork.
 
-## C. ProposedTransition
+## C. OperationClass
+
+Operation risk is evaluated for one declared class:
+
+```text
+READ_DIAGNOSE
+DISCUSS_PLAN
+SHADOW_VALIDATE
+WRITE_DIAGNOSTIC_EVIDENCE
+PRODUCE_NONCANONICAL_WORKING_ARTIFACT
+CLAIM_EXECUTION_UNIT
+EXECUTE_AND_CHECKPOINT
+PUBLISH_AUTHORITATIVE_ARTIFACT
+ISSUE_INDEPENDENT_AUDIT_VERDICT
+MUTATE_CONTROL_STATE
+PROMOTE_OR_ACCEPT_CANONICAL
+LIVENESS_REPAIR
+POLICY_RECONCILIATION
+```
+
+The operation taxonomy is versioned. Unknown operations are never mapped linguistically to the "closest" known operation; they require explicit mapping or semantic review.
+
+## D. ProposedTransition
 
 The kernel validates a transition request; it does not generate project intent.
 
@@ -120,6 +146,7 @@ The kernel validates a transition request; it does not generate project intent.
 schema_version: ack.transition_request.v0.1
 request_id: string
 requested_at: timestamp
+operation_class: OperationClass
 actor:
   role: string
   actor_id: string | null
@@ -138,15 +165,19 @@ idempotency_key: string
 required_evidence: [SourceRef]
 ```
 
-## D. TransitionDecision
+## E. TransitionDecision
 
 ```yaml
 schema_version: ack.transition_decision.v0.1
 decision_id: string
 request_id: string
 decided_at: timestamp
+operation_class: OperationClass
 result: ALLOW | DENY | SEMANTIC_REVIEW_REQUIRED | NOOP_IDEMPOTENT
 risk_mode: GREEN | AMBER | RED
+observed_condition_codes: []
+blocking_condition_codes: []
+nonblocking_warning_codes: []
 checks:
   - check_id: string
     result: PASS | FAIL | WARN | NOT_APPLICABLE
@@ -162,8 +193,13 @@ write_plan:
   expected_current_revision: string | null
 ```
 
+`risk_mode` is operation-scoped. A stale derived snapshot can be AMBER for `READ_DIAGNOSE`, while an exact artifact mismatch is RED for `ISSUE_INDEPENDENT_AUDIT_VERDICT`.
+
+A semantic ambiguity may produce `result: SEMANTIC_REVIEW_REQUIRED`; `risk_mode` then reflects whether ordinary execution of that requested operation must remain blocked until review.
+
 ### Mandatory deterministic transition checks
 
+- operation class is explicitly known;
 - expected revision/status still current;
 - dependencies satisfied;
 - actor role allowed for the requested state surface;
@@ -173,9 +209,10 @@ write_plan:
 - required audit/acceptance gate cannot be bypassed;
 - duplicate `idempotency_key` is either an exact replay (`NOOP_IDEMPOTENT`) or conflict (`DENY`);
 - transition edge exists in the declared state machine;
+- operation-specific GREEN/AMBER/RED permission rule passes;
 - transition does not require semantic interpretation that the kernel cannot perform.
 
-## E. ExecutionCapsule
+## F. ExecutionCapsule
 
 The capsule is a short-lived compiled view for exactly one bounded execution unit. It must be reproducible from source revisions and must never become a second task database.
 
@@ -239,6 +276,7 @@ capabilities:
 
 integrity:
   compiler_result: GREEN | AMBER | RED
+  observed_condition_codes: []
   blockers: []
   warnings: []
 
@@ -248,15 +286,15 @@ provenance_trace:
 
 ### Capsule invariants
 
-- capsule generation requires `EffectiveState.authority_resolution == UNIQUE`;
-- RED state cannot produce an executable capsule;
-- AMBER may produce a diagnostic/noncanonical capsule only if the permission matrix explicitly allows it;
+- capsule generation requires `EffectiveState.health.authority_resolution == UNIQUE`;
+- RED operation decision cannot produce an executable capsule;
+- AMBER may produce an executable capsule only when the operation-specific permission matrix explicitly allows the observed conditions; otherwise a diagnostic/noncanonical capsule only;
 - an executor must reject a capsule whose bound source revisions changed before claim/execution;
 - capsule permissions are the intersection of all effective allowed scopes after prohibitions and stricter local restrictions, never their union;
 - capsule does not contain active tokens/codes as conversational proof when existing policy requires independent external retrieval; it may contain the authoritative locator and verification requirement;
 - capsule compilation never performs the target scientific/content work.
 
-## F. Normalized lifecycle categories
+## G. Normalized lifecycle categories
 
 Legacy raw statuses remain preserved. The kernel may additionally map them to a small normalized class for cross-project materialization:
 
@@ -283,23 +321,25 @@ UNKNOWN
 
 Mapping must be explicit and versioned. Unknown raw states map to `UNKNOWN`; the kernel must not infer the nearest state linguistically.
 
-## G. Risk-mode rule
+## H. Risk-mode rule
 
-`GREEN`, `AMBER`, `RED` is an operational classification, not a replacement for detailed blocker codes.
+`GREEN`, `AMBER`, `RED` is an operational classification, not a replacement for detailed condition/blocker codes.
 
-- `RED`: integrity/authority/concurrency/legal-transition conflict. No ordinary production/promotion.
-- `AMBER`: current authority remains uniquely resolvable but noncritical derived/telemetry/copied metadata is stale or a degraded runtime condition exists. Allowed actions are determined by an explicit permission matrix.
+- `RED`: the requested operation is mechanically blocked by integrity/authority/concurrency/legal-transition conditions, or must remain blocked pending semantic review.
+- `AMBER`: current authority remains uniquely resolvable and required integrity is not false, but a noncritical or operation-irrelevant degradation exists. Allowed actions are determined by the explicit operation permission matrix.
 - `GREEN`: all required mechanical checks for the requested operation pass.
 
-The permission matrix is operation-specific. A condition may be AMBER for discussion/working-draft production but RED for canonical promotion.
+The same observed state can yield different operation risk decisions. The kernel must emit both condition codes and the operation class.
 
-## H. Compiler explainability
+## I. Compiler explainability
 
 Every kernel CLI/API decision must be able to emit a machine-readable explanation containing:
 - source files/revisions read;
 - authority precedence rules applied;
 - field-level provenance;
+- requested operation class;
+- observed/blocking/nonblocking condition codes;
 - every PASS/WARN/FAIL check;
 - whether any semantic decision was intentionally deferred.
 
-A bare boolean is not an acceptable control decision.
+A bare boolean or bare color is not an acceptable control decision.
