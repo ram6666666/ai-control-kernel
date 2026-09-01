@@ -1,0 +1,178 @@
+schema_version: ack.implementation_package.v0.1
+package_id: ACK-IMPL-P01
+title: Pure deterministic core + schemas + local fixtures
+status: PACKAGE_SPEC_FROZEN_PENDING_EXECUTOR_ENABLEMENT
+repository: ram6666666/ai-control-kernel
+base_ref: main
+design_release: ACK-DESIGN-V0.1
+design_freeze_merge_commit: 4eafb779256325471ae0461c17fec9a779eb188a
+design_freeze_manifest:
+  path: releases/design-v0.1/FREEZE_MANIFEST.yaml
+  blob_sha: 5d274448d6782e193d8ed0b2ea0e62fc8b73541d
+implementation_authorized: false
+production_write_authorized: false
+production_cutover_authorized: false
+recommended_executor: CODEX
+work_required: false
+
+objective: >-
+  Implement the frozen v0.1 deterministic control core and local/public regression harness without changing the frozen control semantics or introducing provider/runtime coupling.
+
+allowed_scope:
+  - Python package/project skeleton
+  - schema loading and Draft 2020-12 validation
+  - safe YAML edge loading into JSON-compatible primitives
+  - canonical deterministic JSON serialization
+  - exact raw-status normalization from frozen registry
+  - closed predicate registry dispatch
+  - deterministic A/R/S condition detection
+  - table-driven operation permission evaluator
+  - explicit state-machine transition validator
+  - EffectiveState data structures and resolution primitives needed by public fixtures
+  - CandidateCapsule compiler and validator
+  - claim-observation validation and ExecutionCapsule compiler/validator using fixture claims only
+  - local artifact SHA-256 over actual byte streams
+  - provider-neutral Protocol interfaces from frozen ports spec
+  - filesystem and in-memory/fixture adapters only
+  - sanitized public F01-F10 fixtures and expected outputs
+  - unit, regression, invariant and golden tests
+  - minimal CI configuration after tests are runnable
+  - developer README for local test execution and architecture boundaries
+
+forbidden_scope:
+  - editing frozen design/spec/schema semantics merely to simplify implementation
+  - GitHub production adapter
+  - Google Drive production adapter
+  - Temporal, LangGraph, Restate, Dapr or other workflow-runtime integration
+  - production claim acquisition or release
+  - production task/project/global state writes
+  - ChatGPT Work invocation or scheduler integration
+  - OpenAI/Anthropic/other model-provider invocation
+  - capability-based production scheduler
+  - database migration or ORM
+  - web dashboard or UI
+  - scientific/content generation logic
+  - independent scientific audit judgment
+  - production cutover
+
+frozen_authority:
+  design_brief: docs/design/v0.1/DESIGN_BRIEF.md
+  machine_contracts: docs/design/v0.1/MACHINE_CONTRACTS.md
+  control_surface_map: docs/design/v0.1/CONTROL_SURFACE_MAP.md
+  permission_explanation: docs/design/v0.1/OPERATION_PERMISSION_MATRIX.md
+  fixture_plan: docs/design/v0.1/GOLDEN_FIXTURE_PLAN.md
+  adapter_dependency_decision: docs/design/v0.1/ADAPTER_PORTS_AND_DEPENDENCY_DECISION.md
+  design_audit: docs/design/v0.1/DESIGN_AUDIT_002.md
+  machine_specs:
+    - spec/v0.1/permission_policy.yaml
+    - spec/v0.1/predicate_registry.yaml
+    - spec/v0.1/condition_detectors.yaml
+    - spec/v0.1/state_machine.yaml
+    - spec/v0.1/status_normalization.yaml
+    - spec/v0.1/ports.yaml
+    - spec/v0.1/capsule_lifecycle.yaml
+  schemas:
+    - schemas/v0.1/core-contracts.schema.json
+    - schemas/v0.1/permission-policy.schema.json
+    - schemas/v0.1/predicate-registry.schema.json
+    - schemas/v0.1/state-machine.schema.json
+    - schemas/v0.1/status-normalization.schema.json
+
+implementation_rules:
+  - normative machine artifacts outrank explanatory prose
+  - contradiction_or_missing_semantics_requires_deviation_report_not_guess
+  - unknown operation condition or predicate must follow frozen fail-closed behavior
+  - no fuzzy status mapping
+  - no arbitrary policy expression evaluator
+  - core must not import provider SDKs
+  - adapters provide observations not policy decisions
+  - CandidateCapsule is never executable
+  - ExecutionCapsule requires a verified claim observation
+  - artifact hash requires actual bytes
+  - canonical golden serialization is deterministic JSON
+  - public fixtures must be synthetic/sanitized and contain no private operational identifiers
+
+preferred_repository_layout:
+  pyproject.toml: required
+  src_root: src/ai_control_kernel
+  test_root: tests
+  fixture_root: tests/fixtures
+  package_modules:
+    - schemas
+    - models
+    - serialization
+    - normalization
+    - predicates
+    - conditions
+    - permissions
+    - transitions
+    - artifacts
+    - capsules
+    - ports
+    - adapters/filesystem
+    - adapters/fixtures
+
+acceptance_gates:
+  G1_schema_self_check:
+    require: all shipped JSON Schemas pass Draft 2020-12 schema check
+  G2_registry_validation:
+    require: permission/state-machine/status/predicate registries validate and every referenced P_* predicate exists
+  G3_vocabulary_consistency:
+    require: all state-machine normalized states exist in the declared normalized vocabulary and status normalization targets only declared states
+  G4_core_no_provider_coupling:
+    require: core modules have no provider/workflow/model SDK dependencies
+  G5_fixtures:
+    require: F01-F10 each have deterministic sanitized inputs and expected decisions/materialized outputs as applicable
+  G6_negative_invariants:
+    require:
+      - stricter prohibition cannot increase permissions
+      - stale derived view cannot override stronger authority
+      - same-rank conflict cannot be resolved by timestamp
+      - changed bound revision invalidates capsule
+      - idempotent replay cannot double-advance
+      - same idempotency key with changed payload is denied
+      - required artifact mismatch cannot yield executable capsule
+      - semantic ambiguity cannot yield ALLOW authority effect
+      - equivalent normalized adapter evidence preserves core decision
+      - artifact SHA256 is computed only from supplied bytes
+  G7_test_suite:
+    require: full local test suite passes from clean checkout using documented command
+  G8_no_semantic_deviation:
+    require: no unresolved deviation from frozen design/spec/schema semantics
+  G9_shadow_only:
+    require: implementation has no production network/write path enabled
+
+required_outputs:
+  - implementation source code
+  - public sanitized fixtures F01-F10
+  - golden expected outputs
+  - automated tests
+  - dependency metadata and lock/range policy as appropriate
+  - CI workflow if practical after local tests pass
+  - README/developer instructions
+  - IMPLEMENTATION_REPORT.md
+  - DEVIATION_REPORT.yaml
+
+report_contract:
+  implementation_report_must_include:
+    - files/modules implemented
+    - test command and result
+    - fixture coverage
+    - schema/registry consistency checks
+    - known limitations
+    - explicit confirmation that production adapters/writes are absent
+  deviation_report:
+    empty_allowed: true
+    every_nonempty_item_requires:
+      - frozen_authority_pointer
+      - observed_problem
+      - proposed_resolution
+      - implementation_blocked_until_adjudicated
+
+completion_state_if_all_gates_pass: IMPLEMENTED_P01_AWAITING_INDEPENDENT_REVIEW_AND_PRIVATE_SHADOW_E2E
+completion_does_not_mean_production_ready: true
+
+executor_enablement:
+  required_before_code_changes: true
+  authorized_executor_class: CODEX_OR_EQUIVALENT_REPO_AWARE_CODING_EXECUTOR
+  current_state: WAITING_USER_CODEX_ENABLEMENT_OR_EXPLICIT_EXECUTOR_AUTHORIZATION
