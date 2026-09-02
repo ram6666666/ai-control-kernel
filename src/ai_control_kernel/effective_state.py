@@ -167,11 +167,11 @@ class EffectiveStateResolver:
     @staticmethod
     def _actions_with_sources(*layers: tuple[Mapping[str, Any], Mapping[str, Any] | None], key: str, intersect: bool = False) -> list[tuple[str, Mapping[str, Any]]]:
         declared: list[tuple[list[str], Mapping[str, Any] | None]] = []
-        for layer, source in layers:
+        for layer, layer_source in layers:
             if key not in layer:
                 continue
             values = [value for value in (_action_value(item) for item in _list(layer.get(key))) if value is not None]
-            declared.append((list(dict.fromkeys(values)), source))
+            declared.append((list(dict.fromkeys(values)), layer_source))
         if not declared:
             return []
         if intersect:
@@ -187,11 +187,11 @@ class EffectiveStateResolver:
                         ordered.append(value)
         result: list[tuple[str, Mapping[str, Any]]] = []
         for value in ordered:
-            source: Mapping[str, Any] | None = None
+            selected_source: Mapping[str, Any] | None = None
             for values, candidate_source in reversed(declared):
                 if value in values and candidate_source is not None:
-                    source = candidate_source
+                    selected_source = candidate_source
                     break
-            if source is not None:
-                result.append((value, source))
+            if selected_source is not None:
+                result.append((value, selected_source))
         return result
