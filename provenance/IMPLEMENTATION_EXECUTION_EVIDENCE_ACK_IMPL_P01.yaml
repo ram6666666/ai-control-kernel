@@ -1,0 +1,21 @@
+schema_version: 0.1
+package_id: ACK-IMPL-P01
+recorded_at_utc: 2026-09-02T13:45:00Z
+source: CODEX_EXECUTOR_REPORT
+branch: impl/ack-impl-p01
+head_commit: e4cf4f0dfb2c16e6eeeda8f21c94ddb4ce526ef6
+reported_results:
+  python_3_12: PASS
+  python_3_13: PASS
+  static_analysis: PASS
+  test_count: 59
+  security_checks: PASS
+  pip_check: PASS
+  coverage_percent: 98.73
+  build: PASS
+  compile_checks: PASS
+  frozen_files_unchanged: true
+  production_integrations_or_writes: false
+verification_status: EXECUTOR_REPORTED_AWAITING_PR_CI_REPRODUCTION
+note: >-
+  This record preserves executor-reported evidence but does not substitute for clean-checkout GitHub CI or independent review required by the frozen package acceptance gate.
