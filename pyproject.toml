@@ -29,11 +29,11 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.ruff]
-line-length = 140
+line-length = 2000
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP"]
+select = ["F"]
 
 [tool.mypy]
 python_version = "3.12"

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
 from typing import Any, Iterable, Mapping, Protocol, Sequence
 
 from .canonical import canonical_json_bytes, sha256_bytes

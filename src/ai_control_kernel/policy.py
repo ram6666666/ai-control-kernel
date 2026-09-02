@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
 from .canonical import normalize_timestamp
-from .predicates import PredicateRegistry, PredicateResult
+from .predicates import PredicateRegistry
 
 
 _RISK_ORDER = {"GREEN": 0, "AMBER": 1, "RED": 2}

@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import yaml
-
 from ai_control_kernel.conditions import ConditionDetector
 from ai_control_kernel.policy import PermissionEvaluator
 from ai_control_kernel.schema import load_yaml

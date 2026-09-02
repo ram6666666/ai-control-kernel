@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from ai_control_kernel.predicates import PredicateRegistry
-from ai_control_kernel.schema import SchemaRegistry, load_yaml
+from ai_control_kernel.schema import SchemaRegistry
 
 
 @pytest.fixture
