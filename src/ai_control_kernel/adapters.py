@@ -39,7 +39,9 @@ class FilesystemControlSourceReader:
         else:
             content = raw.decode("utf-8")
         source_ref = {"source_type": source_type, "locator": locator, "revision": None, "content_hash": None, "observed_at": None, "authority_class": "EVIDENCE"}
-        return {"content": content, "source_ref": source_ref, "integrity": {"status": "VERIFIED", "algorithm": "SHA256", "expected": None, "observed": sha256_stream(path.open("rb"))[0], "source": source_ref}}
+        with path.open("rb") as handle:
+            observed, _ = sha256_stream(handle)
+        return {"content": content, "source_ref": source_ref, "integrity": {"status": "VERIFIED", "algorithm": "SHA256", "expected": None, "observed": observed, "source": source_ref}}
 
 
 @dataclass

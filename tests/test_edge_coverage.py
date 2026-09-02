@@ -186,3 +186,44 @@ def test_predicate_dispatch_and_alternate_inputs(predicate_registry: PredicateRe
     assert predicate_registry._policy_reconciliation_scope({"semantic_change_flags": [], "requested_policy_repair": {}})
     assert not predicate_registry._policy_reconciliation_scope({"semantic_change_flags": [True], "requested_policy_repair": {}})
 
+
+def test_each_frozen_operation_and_state_edge_is_exercised(policy, predicate_registry, state_machine) -> None:
+    evaluator = PermissionEvaluator(policy, predicate_registry)
+    context = {
+        "authority_resolution": "UNIQUE",
+        "expected_revisions": {"task": "1"},
+        "observed_current_revisions": {"task": "1"},
+        "operation_required_integrity_verdicts": [{"status": "VERIFIED"}],
+        "required_gates": [],
+        "available_evidence": {},
+        "active_claims": [],
+        "proposed_claim": {},
+        "requested_mutations": {},
+        "parent_permissions": ["READ_DIAGNOSE", "MUTATE_CONTROL_STATE"],
+        "proposed_permissions": [],
+        "local_restrictions": [],
+        "requested_output_authority_class": "NONCANONICAL",
+        "shadow_inputs": [],
+        "audit_gate": {"exact_artifact_required": False},
+        "observed_amber_conditions": [],
+        "required_promotion_facets": [],
+        "semantic_change_flags": [],
+        "requested_policy_repair": {},
+        "requested_repair_condition_code": "A_SCHEDULER_DEGRADED_NO_SIDE_EFFECT",
+        "observed_condition_codes": ["A_SCHEDULER_DEGRADED_NO_SIDE_EFFECT"],
+        "recovery_owner_class": "PACKAGE_CONTROLLER",
+    }
+    for operation in policy["base_by_operation"]:
+        decision = evaluator.evaluate(operation, context=context)
+        assert decision["operation_class"] == operation
+    validator = TransitionValidator(state_machine, predicate_registry)
+    for rule in state_machine["rules"]:
+        current = str(rule.get("from", rule.get("from_set", [""])[0]))
+        target = str(rule["to"])
+        edge_context = dict(context)
+        edge_context.update({"actor_role": str(rule["writer_owner"]), "target_state_class": str(rule["writer_owner"])})
+        if rule.get("evidence_requirements"):
+            edge_context["evidence_requirements"] = {str(item): True for item in rule["evidence_requirements"]}
+        result = validator.validate(current, target, operation_class=str(rule["operation_class"]), context=edge_context)
+        assert result.rule_id == str(rule["id"])
+
