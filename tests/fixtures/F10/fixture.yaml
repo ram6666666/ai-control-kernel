@@ -1,0 +1,13 @@
+fixture_id: F10
+incident_class: STRICTER_LOCAL_RESTRICTION
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: MUTATE_CONTROL_STATE
+expected_result: DENY
+expected_risk_mode: RED
+expected_condition_codes: ["R_ROLE_WRITE_VIOLATION"]
+expected_semantic_review: false
+must_not: ["union_global_permissions"]
+

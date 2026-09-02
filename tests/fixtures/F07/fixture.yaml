@@ -1,0 +1,13 @@
+fixture_id: F07
+incident_class: ARTIFACT_IDENTITY_MISMATCH
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: PUBLISH_AUTHORITATIVE_ARTIFACT
+expected_result: DENY
+expected_risk_mode: RED
+expected_condition_codes: ["R_ARTIFACT_IDENTITY_MISMATCH"]
+expected_semantic_review: false
+must_not: ["change_expected_hash"]
+

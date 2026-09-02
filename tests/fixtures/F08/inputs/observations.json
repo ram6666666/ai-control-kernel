@@ -1,0 +1,2 @@
+{"identity_comparison":"MISMATCH","expected_artifact_identity":{"authority_class":"CANONICAL","sha256":"canonical"},"observed_artifact_identity":{"authority_class":"DERIVED","sha256":"shadow"}}
+
