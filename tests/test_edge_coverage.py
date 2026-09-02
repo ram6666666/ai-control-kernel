@@ -3,6 +3,7 @@ from io import BytesIO, StringIO
 from pathlib import Path
 
 import pytest
+from jsonschema.exceptions import UnknownType
 
 from ai_control_kernel.adapters import FixtureExecutorCapabilitySource, FixtureRuntimeObservationSource, FilesystemArtifactReader, FilesystemControlSourceReader
 from ai_control_kernel.canonical import canonical_json, normalize_timestamp, sha256_file, sha256_stream, stable_unique
@@ -12,7 +13,7 @@ from ai_control_kernel.effective_state import EffectiveStateResolver
 from ai_control_kernel.events import ImmutableEventReader, materialize_events, validate_event
 from ai_control_kernel.policy import PermissionEvaluator, evaluate_operation
 from ai_control_kernel.predicates import PredicateRegistry
-from ai_control_kernel.schema import SchemaError, SchemaValidationError, _json_compatible, load_json, load_yaml, require_valid, validate_document
+from ai_control_kernel.schema import SchemaValidationError, _json_compatible, load_json, load_yaml, require_valid, validate_document
 from ai_control_kernel.state_machine import TransitionValidation, TransitionValidator
 from ai_control_kernel.status import StatusNormalizer, normalize_status
 
@@ -107,7 +108,7 @@ def test_canonical_and_schema_alternatives(tmp_path: Path) -> None:
     with pytest.raises(TypeError):
         _json_compatible(object())
     require_valid({"x": 1}, {"type": "object", "required": ["x"]})
-    with pytest.raises(SchemaError):
+    with pytest.raises(UnknownType):
         validate_document({}, {"type": "not-a-real-type"})
     assert normalize_status("READY", {"mappings": {"global": {"READY": "READY"}}}) == "READY"
 
