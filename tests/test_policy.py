@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+from ai_control_kernel.policy import PermissionEvaluator
+
 
 def _ctx() -> dict:
     return {
