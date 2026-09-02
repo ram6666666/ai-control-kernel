@@ -1,0 +1,1 @@
+Only `impl/ack-impl-p01` contains P01 implementation code. Provenance/control records committed to `main` do not alter frozen design/spec/schema/package semantics and are outside the implementation diff. The implementation PR must be reviewed against the frozen baseline and cannot merge before required CI and independent review pass.
