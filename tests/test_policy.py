@@ -5,11 +5,24 @@ from ai_control_kernel.policy import PermissionEvaluator
 
 def _ctx() -> dict:
     return {
-        "authority_resolution": "UNIQUE", "expected_revisions": {"task": "1"}, "observed_current_revisions": {"task": "1"},
-        "operation_required_integrity_verdicts": [{"status": "VERIFIED"}], "required_gates": [], "available_evidence": {},
-        "active_claims": [], "proposed_claim": {}, "actor_role": "PACKAGE_CONTROLLER", "target_state_class": "PACKAGE_CONTROLLER",
-        "single_writer_map": {"PACKAGE_CONTROLLER": "PACKAGE_CONTROLLER"}, "proposed_permissions": [], "parent_permissions": [], "local_restrictions": [],
-        "requested_mutations": {}, "requested_output_authority_class": "NONCANONICAL", "shadow_inputs": [], "predicate_evidence": [],
+        "authority_resolution": "UNIQUE",
+        "expected_revisions": {"task": "1"},
+        "observed_current_revisions": {"task": "1"},
+        "operation_required_integrity_verdicts": [{"status": "VERIFIED"}],
+        "required_gates": [],
+        "available_evidence": {},
+        "active_claims": [],
+        "proposed_claim": {},
+        "actor_role": "PACKAGE_CONTROLLER",
+        "target_state_class": "PACKAGE_CONTROLLER",
+        "single_writer_map": {"PACKAGE_CONTROLLER": "PACKAGE_CONTROLLER"},
+        "proposed_permissions": [],
+        "parent_permissions": [],
+        "local_restrictions": [],
+        "requested_mutations": {},
+        "requested_output_authority_class": "NONCANONICAL",
+        "shadow_inputs": [],
+        "predicate_evidence": [],
     }
 
 
@@ -57,4 +70,3 @@ def test_policy_reconciliation_requires_explicit_mechanical_decision(predicate_r
     assert evaluator.evaluate("POLICY_RECONCILIATION", context=ctx)["result"] == "DENY"
     ctx["requested_policy_repair"] = {"mechanically_decidable": True}
     assert evaluator.evaluate("POLICY_RECONCILIATION", context=ctx)["result"] == "NOOP_IDEMPOTENT"
-

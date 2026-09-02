@@ -195,4 +195,3 @@ class EffectiveStateResolver:
             if source is not None:
                 result.append((value, source))
         return result
-

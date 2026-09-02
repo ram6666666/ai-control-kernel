@@ -67,4 +67,3 @@ def normalize_status(
         project_task_extension=project_task_extension,
         project_extension=project_extension,
     )
-

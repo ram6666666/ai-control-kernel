@@ -94,4 +94,3 @@ class FilesystemShadowOutputSink:
         path.write_bytes(canonical_json_bytes(payload))
         source_ref = {"source_type": "DERIVED_VIEW", "locator": str(path), "revision": None, "content_hash": None, "observed_at": None, "authority_class": "DERIVED"}
         return {"result_locator": str(path), "revision": None, "source_ref": source_ref, "source_revisions": list(source_revisions)}
-

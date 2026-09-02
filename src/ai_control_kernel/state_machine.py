@@ -85,4 +85,3 @@ class TransitionValidator:
 
     def validate_transition(self, current_state: str, target_state: str, **kwargs: Any) -> dict[str, Any]:
         return self.validate(current_state, target_state, **kwargs).as_dict()
-

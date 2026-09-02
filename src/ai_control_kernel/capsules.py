@@ -157,4 +157,3 @@ def is_capsule_invalidated(capsule: Mapping[str, Any], current_source_revisions:
     if any(not normalized_claim[field] or not concurrency.get(field) for field in required):
         return True
     return any(concurrency[field] != normalized_claim[field] for field in required)
-

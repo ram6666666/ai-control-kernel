@@ -23,4 +23,3 @@ def test_public_fixtures_are_sanitized_and_adapters_emit_observations_only() -> 
     assert observation["observation_type"] == "UNAVAILABLE"
     assert capability["executor_id"] == "executor"
     assert "result" not in observation and "decision" not in capability
-

@@ -30,4 +30,3 @@ def test_invalid_extension_metadata_cannot_override_global(status_registry) -> N
 def test_validation_reports_paths() -> None:
     errors = validate_document({}, {"type": "object", "required": ["x"]})
     assert errors and errors[0].startswith("$")
-

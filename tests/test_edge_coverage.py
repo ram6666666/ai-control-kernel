@@ -227,4 +227,3 @@ def test_each_frozen_operation_and_state_edge_is_exercised(policy, predicate_reg
             edge_context["evidence_requirements"] = {str(item): True for item in rule["evidence_requirements"]}
         result = validator.validate(current, target, operation_class=str(rule["operation_class"]), context=edge_context)
         assert result.rule_id == str(rule["id"])
-

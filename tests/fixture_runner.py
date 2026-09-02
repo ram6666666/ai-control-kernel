@@ -92,4 +92,3 @@ def assert_fixture_must_not(fixture: Mapping[str, Any], generated: Mapping[str, 
 
 def canonical_golden_bytes(value: Mapping[str, Any]) -> bytes:
     return canonical_json_bytes(value)
-

@@ -21,4 +21,3 @@ def test_timestamp_and_binary_hash() -> None:
     digest, size = sha256_stream(BytesIO(b"abc"))
     assert digest == sha256_bytes(b"abc")
     assert size == 3
-

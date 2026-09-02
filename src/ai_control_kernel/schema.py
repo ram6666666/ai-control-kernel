@@ -95,4 +95,3 @@ class SchemaRegistry:
             "status_normalization.yaml": "status-normalization.schema.json",
         }
         return {spec_name: self.validate_spec(spec_name, schema_name) for spec_name, schema_name in pairs.items()}
-

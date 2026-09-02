@@ -34,4 +34,3 @@ def state_machine(registry: SchemaRegistry):
 @pytest.fixture
 def status_registry(registry: SchemaRegistry):
     return registry.spec("status_normalization.yaml")
-

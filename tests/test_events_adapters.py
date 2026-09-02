@@ -32,4 +32,3 @@ def test_filesystem_adapters_are_root_bounded(tmp_path: Path) -> None:
     sink = FilesystemShadowOutputSink(tmp_path / "shadow")
     receipt = sink.write_result("state", {"ok": True}, [])
     assert Path(receipt["result_locator"]).exists()
-

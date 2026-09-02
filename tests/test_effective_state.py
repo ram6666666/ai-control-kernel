@@ -29,4 +29,3 @@ def test_invalid_authority_resolution_is_ambiguous() -> None:
     state = EffectiveStateResolver().resolve({"global_policy": {}, "authority_resolution": "NOT_A_STATE"}, resolved_at="2026-01-01T00:00:00Z")
     assert state["health"]["authority_resolution"] == "AMBIGUOUS"
     assert state["health"]["semantic_review_required"] is True
-

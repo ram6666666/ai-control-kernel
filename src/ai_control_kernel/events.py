@@ -78,4 +78,3 @@ class ImmutableEventReader:
             if event.get("event_id") == after_revision:
                 found = True
         return result
-

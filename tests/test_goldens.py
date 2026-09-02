@@ -31,4 +31,3 @@ def test_f01_to_f10_complete_pipeline_and_canonical_goldens(registry, predicate_
         fixture, generated, expected, decision = run_fixture(root / fixture_id, registry, predicate_registry)
         assert canonical_golden_bytes(generated) == canonical_golden_bytes(expected)
         assert_fixture_must_not(fixture, generated, decision)
-

@@ -78,4 +78,3 @@ def stable_unique(values: Iterable[str]) -> list[str]:
     """Preserve first occurrence order while removing duplicate strings."""
 
     return list(dict.fromkeys(values))
-

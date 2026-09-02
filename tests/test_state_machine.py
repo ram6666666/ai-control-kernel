@@ -5,10 +5,18 @@ from ai_control_kernel.state_machine import TransitionValidator
 
 def _pass_context() -> dict:
     return {
-        "authority_resolution": "UNIQUE", "expected_revisions": {"task": "1"}, "observed_current_revisions": {"task": "1"},
-        "operation_required_integrity_verdicts": [{"status": "VERIFIED"}], "active_claims": [], "proposed_claim": {},
-        "actor_role": "PACKAGE_CONTROLLER", "target_state_class": "PACKAGE_CONTROLLER", "single_writer_map": {"PACKAGE_CONTROLLER": "PACKAGE_CONTROLLER"},
-        "operation_gate_spec": [], "available_evidence": {}, "predicate_evidence": [],
+        "authority_resolution": "UNIQUE",
+        "expected_revisions": {"task": "1"},
+        "observed_current_revisions": {"task": "1"},
+        "operation_required_integrity_verdicts": [{"status": "VERIFIED"}],
+        "active_claims": [],
+        "proposed_claim": {},
+        "actor_role": "PACKAGE_CONTROLLER",
+        "target_state_class": "PACKAGE_CONTROLLER",
+        "single_writer_map": {"PACKAGE_CONTROLLER": "PACKAGE_CONTROLLER"},
+        "operation_gate_spec": [],
+        "available_evidence": {},
+        "predicate_evidence": [],
     }
 
 
@@ -25,4 +33,3 @@ def test_representative_edges(edge, state_machine, predicate_registry) -> None:
     validator = TransitionValidator(state_machine, predicate_registry)
     result = validator.validate(*edge[:2], operation_class=edge[2], context=_pass_context())
     assert result.rule_id is not None
-

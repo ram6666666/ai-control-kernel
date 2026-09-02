@@ -101,13 +101,7 @@ class PermissionEvaluator:
         record_lease = record.get("lease_revision", record.get("lease_or_expected_revision"))
         if not all((key, proposed.get("claim_id"), proposed.get("claimant"), proposed_lease, proposed.get("payload_hash"), record.get("claim_id"), record.get("claimant"), record_lease, record.get("payload_hash"))):
             return False
-        return (
-            record.get("idempotency_key") == key
-            and record.get("claim_id") == proposed.get("claim_id")
-            and record.get("claimant") == proposed.get("claimant")
-            and record_lease == proposed_lease
-            and record.get("payload_hash") == proposed.get("payload_hash")
-        )
+        return record.get("idempotency_key") == key and record.get("claim_id") == proposed.get("claim_id") and record.get("claimant") == proposed.get("claimant") and record_lease == proposed_lease and record.get("payload_hash") == proposed.get("payload_hash")
 
     def _apply_rule(self, rule: Mapping[str, Any], context: Mapping[str, Any]) -> tuple[str, list[dict[str, Any]]]:
         if rule.get("mode") == "DIRECT":
@@ -175,4 +169,3 @@ def evaluate_operation(
     predicates: PredicateRegistry | None = None,
 ) -> dict[str, Any]:
     return PermissionEvaluator(policy, predicates).evaluate(operation_class, condition_codes, context=context)
-
