@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, BinaryIO, Mapping, Sequence
 
 import yaml
 
@@ -49,7 +49,7 @@ class FilesystemArtifactReader:
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root).resolve()
 
-    def open_bytes(self, locator: str):
+    def open_bytes(self, locator: str) -> BinaryIO:
         path = _safe_path(self.root, locator)
         return path.open("rb")
 

@@ -99,7 +99,7 @@ class PredicateRegistry:
         state = _as_mapping(context.get("effective_state"))
         health = _as_mapping(state.get("health"))
         value = context.get("authority_resolution", health.get("authority_resolution"))
-        return value == "UNIQUE"
+        return bool(value == "UNIQUE")
 
     @staticmethod
     def _required_integrity(context: Mapping[str, Any]) -> bool:

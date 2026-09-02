@@ -38,6 +38,7 @@ select = ["F"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
+ignore_missing_imports = true
 files = ["src"]
 
 [tool.pytest.ini_options]
