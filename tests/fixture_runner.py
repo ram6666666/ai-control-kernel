@@ -59,12 +59,7 @@ def run_fixture(fixture_dir: Path, registry: SchemaRegistry, predicates: Predica
         decision_id=f"decision-{fixture['fixture_id']}",
         decided_at="2026-01-01T00:00:00Z",
     )
-    generated = {
-        "fixture_id": str(fixture["fixture_id"]),
-        "result": decision["result"],
-        "risk_mode": decision["risk_mode"],
-        "observed_condition_codes": decision["observed_condition_codes"],
-    }
+    generated = decision
     expected = load_json(fixture_dir / "expected" / "transition_decision.json")
     return fixture, generated, expected, decision
 
