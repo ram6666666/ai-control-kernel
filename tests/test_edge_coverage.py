@@ -165,6 +165,7 @@ def test_predicate_dispatch_and_alternate_inputs(predicate_registry: PredicateRe
     assert not predicate_registry._required_gates({"operation_gate_spec": "bad", "available_evidence": {}})
     proposed = {"execution_unit_id": "u", "claim_id": "c", "claimant": "a", "lease_revision": "1", "idempotency_key": "k", "payload_hash": "h"}
     assert predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "idempotency_record": {"idempotency_key": "k", "claim_id": "c", "payload_hash": "h"}})
+    assert not predicate_registry._claim_conflict_absent({"proposed_claim": {key: value for key, value in proposed.items() if key != "payload_hash"}, "idempotency_record": {"idempotency_key": "k", "claim_id": "c", "payload_hash": "h"}})
     assert not predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "idempotency_record": {"idempotency_key": "k", "claim_id": "other", "payload_hash": "h"}})
     assert predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "active_claims": [{"execution_unit_id": "other"}]})
     assert predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "active_claims": [{"execution_unit_id": "u", "claim_id": "c", "claimant": "a", "lease_revision": "1"}]})
