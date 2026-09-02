@@ -38,7 +38,7 @@ class PermissionEvaluator:
     ) -> dict[str, Any]:
         facts = dict(context or {})
         codes = list(dict.fromkeys(condition_codes or []))
-        base = _mapping(_mapping(self.policy.get("base_by_operation")).get(operation_class))
+        base_rules = _mapping(_mapping(self.policy.get("base_by_operation")).get(operation_class))
         known_operations = set(_mapping(self.policy.get("base_by_operation")))
         if operation_class not in known_operations:
             return self._decision(operation_class, "SEMANTIC_REVIEW_REQUIRED", "RED", codes, [], request_id, decision_id, decided_at, facts, semantic_questions=["operation class is not in the closed registry"])
@@ -55,18 +55,19 @@ class PermissionEvaluator:
             return self._decision(operation_class, "SEMANTIC_REVIEW_REQUIRED", "RED", codes, [], request_id, decision_id, decided_at, facts, semantic_questions=questions)
 
         risks = ["GREEN"]
-        rules: list[Mapping[str, Any]] = []
         for code in codes:
-            override = _mapping(overrides.get(code))
-            risk = override.get("risk")
+            risk = _mapping(overrides.get(code)).get("risk")
             if isinstance(risk, str):
                 risks.append(risk)
-            operation_overrides = _mapping(override.get("operation_overrides"))
-            rule = _mapping(operation_overrides.get(operation_class)) or base
-            rules.append(rule)
-        if not rules:
-            rules = [base]
         risk_mode = max(risks, key=lambda item: _RISK_ORDER.get(item, 2))
+        effective_base_rule = _mapping(base_rules.get(risk_mode, base_rules.get("GREEN", {})))
+        rules: list[Mapping[str, Any]] = []
+        if codes:
+            for code in codes:
+                operation_overrides = _mapping(_mapping(overrides.get(code)).get("operation_overrides"))
+                rules.append(_mapping(operation_overrides.get(operation_class)) or effective_base_rule)
+        else:
+            rules = [effective_base_rule]
         # A condition-specific rule is authoritative over the base rule. Multiple
         # rules are merged conservatively: one failed gate denies the operation.
         all_checks: list[dict[str, Any]] = []
