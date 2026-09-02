@@ -156,13 +156,7 @@ class PredicateRegistry:
         claim_id = proposed.get("claim_id")
         record = _as_mapping(context.get("idempotency_record"))
         if record and (not key or record.get("idempotency_key") == key):
-            return (
-                bool(key)
-                and isinstance(proposed.get("payload_hash"), str)
-                and bool(proposed.get("payload_hash"))
-                and record.get("claim_id") == claim_id
-                and record.get("payload_hash") == proposed.get("payload_hash")
-            )
+            return bool(key) and isinstance(proposed.get("payload_hash"), str) and bool(proposed.get("payload_hash")) and record.get("claim_id") == claim_id and record.get("payload_hash") == proposed.get("payload_hash")
         for claim in _as_list(context.get("active_claims")):
             item = _as_mapping(claim)
             if item.get("execution_unit_id") != proposed.get("execution_unit_id"):
