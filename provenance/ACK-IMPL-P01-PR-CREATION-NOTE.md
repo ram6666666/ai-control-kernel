@@ -1,0 +1,1 @@
+Implementation PR creation was explicitly approved by the user after a prior connector usage-limit warning. Head branch: `impl/ack-impl-p01`; expected implementation head before PR creation: `e4cf4f0dfb2c16e6eeeda8f21c94ddb4ce526ef6`. Merge remains unauthorized until clean-checkout CI and independent review satisfy the frozen acceptance gate.
