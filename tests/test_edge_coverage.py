@@ -1,5 +1,5 @@
 from datetime import datetime
-from io import BytesIO, StringIO
+from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -25,7 +25,8 @@ def test_adapter_and_hash_edges(tmp_path: Path) -> None:
     with artifact.open_bytes("data.txt") as handle:
         assert handle.read() == b"plain"
     digest, size = sha256_stream(BytesIO(b"abc"), chunk_size=1)
-    assert size == 3 and digest == sha256_file(tmp_path / "data.txt")[0] if False else size == 3
+    assert size == 3
+    assert digest != sha256_file(tmp_path / "data.txt")[0]
     assert sha256_file(tmp_path / "data.txt", root=tmp_path)[1] == 5
     with pytest.raises(ValueError):
         sha256_file(tmp_path / "data.txt", root=tmp_path / "other")
