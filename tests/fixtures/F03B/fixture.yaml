@@ -1,0 +1,14 @@
+fixture_id: F03B
+incident_class: DUPLICATE_CLAIM_CONFLICT
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: CLAIM_EXECUTION_UNIT
+expected_result: DENY
+expected_risk_mode: RED
+expected_condition_codes: ["R_CLAIM_CONFLICT"]
+expected_semantic_review: false
+must_not: ["classify_conflict_as_retry"]
+
+

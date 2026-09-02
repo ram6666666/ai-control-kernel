@@ -1,0 +1,10 @@
+{
+  "fixture_id": "F01",
+  "result": "ALLOW",
+  "risk_mode": "AMBER",
+  "observed_condition_codes": [
+    "A_STALE_COPIED_METADATA"
+  ]
+}
+
+

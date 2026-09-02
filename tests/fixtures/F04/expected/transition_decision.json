@@ -1,0 +1,10 @@
+{
+  "fixture_id": "F04",
+  "result": "ALLOW",
+  "risk_mode": "AMBER",
+  "observed_condition_codes": [
+    "A_SCHEDULER_DEGRADED_NO_SIDE_EFFECT"
+  ]
+}
+
+

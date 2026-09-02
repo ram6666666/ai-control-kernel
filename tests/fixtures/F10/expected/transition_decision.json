@@ -1,0 +1,9 @@
+{
+  "fixture_id": "F10",
+  "result": "DENY",
+  "risk_mode": "RED",
+  "observed_condition_codes": ["R_ROLE_WRITE_VIOLATION"]
+}
+*** Add File: C:/Users/jiawe/.codex/visualizations/2026/09/01/01a05f09-bf29-7610-86ce-b79d2187b627/tests/fixtures/F10/inputs/observations.json
+{}
+

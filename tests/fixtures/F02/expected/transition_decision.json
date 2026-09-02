@@ -1,0 +1,10 @@
+{
+  "fixture_id": "F02",
+  "result": "DENY",
+  "risk_mode": "RED",
+  "observed_condition_codes": [
+    "R_POLICY_FINGERPRINT_MISMATCH"
+  ]
+}
+
+

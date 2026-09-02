@@ -1,0 +1,14 @@
+fixture_id: F02
+incident_class: CANONICAL_FINGERPRINT_MISMATCH
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: EXECUTE_AND_CHECKPOINT
+expected_result: DENY
+expected_risk_mode: RED
+expected_condition_codes: ["R_POLICY_FINGERPRINT_MISMATCH"]
+expected_semantic_review: false
+must_not: ["auto_adopt_new_fingerprint"]
+
+

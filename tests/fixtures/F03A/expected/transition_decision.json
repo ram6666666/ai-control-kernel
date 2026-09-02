@@ -1,0 +1,8 @@
+{
+  "fixture_id": "F03A",
+  "result": "NOOP_IDEMPOTENT",
+  "risk_mode": "GREEN",
+  "observed_condition_codes": []
+}
+
+

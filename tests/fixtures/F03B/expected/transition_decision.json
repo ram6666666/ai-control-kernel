@@ -1,0 +1,10 @@
+{
+  "fixture_id": "F03B",
+  "result": "DENY",
+  "risk_mode": "RED",
+  "observed_condition_codes": [
+    "R_CLAIM_CONFLICT"
+  ]
+}
+
+

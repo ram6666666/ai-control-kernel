@@ -1,0 +1,13 @@
+fixture_id: F08
+incident_class: NONCANONICAL_SHADOW_ARTIFACT
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: PROMOTE_OR_ACCEPT_CANONICAL
+expected_result: DENY
+expected_risk_mode: RED
+expected_condition_codes: []
+expected_semantic_review: false
+must_not: ["promote_shadow_implicitly"]
+

@@ -1,0 +1,9 @@
+{
+  "fixture_id": "F06",
+  "result": "DENY",
+  "risk_mode": "RED",
+  "observed_condition_codes": ["R_REQUIRED_ARTIFACT_UNAVAILABLE"]
+}
+*** Add File: C:/Users/jiawe/.codex/visualizations/2026/09/01/01a05f09-bf29-7610-86ce-b79d2187b627/tests/fixtures/F06/inputs/observations.json
+{}
+
