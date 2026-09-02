@@ -1,0 +1,8 @@
+schema_version: 0.1
+package_id: ACK-IMPL-P01
+state: PR_CREATION_AUTHORIZED
+head_branch: impl/ack-impl-p01
+head_commit_before_pr_creation: e4cf4f0dfb2c16e6eeeda8f21c94ddb4ce526ef6
+base_branch: main
+merge_authorized: false
+production_cutover_authorized: false
