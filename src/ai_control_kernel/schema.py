@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 

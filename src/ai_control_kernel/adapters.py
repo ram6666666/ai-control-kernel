@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, BinaryIO, Mapping, Sequence
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from .canonical import canonical_json_bytes, sha256_stream
 
