@@ -16,6 +16,15 @@ class StatusNormalizer:
     def _extension_mapping(extension: Mapping[str, Any] | None) -> Mapping[str, str]:
         if extension is None:
             return {}
+        required_text = ("namespace", "version", "owner_class", "rationale_pointer")
+        if any(not isinstance(extension.get(field), str) or not extension[field].strip() for field in required_text):
+            return {}
+        if extension.get("may_override_global_mapping") is not True:
+            return {}
+        if extension.get("override_requires_explicit_raw_status_key") is not True:
+            return {}
+        if extension.get("may_change_semantic_meaning_without_authority") is not False:
+            return {}
         exact = extension.get("exact_mappings", {})
         return exact if isinstance(exact, Mapping) else {}
 

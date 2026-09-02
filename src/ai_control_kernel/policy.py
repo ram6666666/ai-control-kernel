@@ -54,20 +54,21 @@ class PermissionEvaluator:
             questions = [f"semantic condition {code} requires authoritative review" for code in semantic_codes]
             return self._decision(operation_class, "SEMANTIC_REVIEW_REQUIRED", "RED", codes, [], request_id, decision_id, decided_at, facts, semantic_questions=questions)
 
+        if operation_class == "CLAIM_EXECUTION_UNIT" and self._is_idempotent_replay(facts):
+            return self._decision(operation_class, "NOOP_IDEMPOTENT", "GREEN", codes, [], request_id, decision_id, decided_at, facts)
+
         risks = ["GREEN"]
-        for code in codes:
-            risk = _mapping(overrides.get(code)).get("risk")
-            if isinstance(risk, str):
-                risks.append(risk)
-        risk_mode = max(risks, key=lambda item: _RISK_ORDER.get(item, 2))
-        effective_base_rule = _mapping(base_rules.get(risk_mode, base_rules.get("GREEN", {})))
         rules: list[Mapping[str, Any]] = []
-        if codes:
-            for code in codes:
-                operation_overrides = _mapping(_mapping(overrides.get(code)).get("operation_overrides"))
-                rules.append(_mapping(operation_overrides.get(operation_class)) or effective_base_rule)
-        else:
-            rules = [effective_base_rule]
+        for code in codes:
+            override = _mapping(overrides.get(code))
+            declared_risk = override.get("risk")
+            risk = declared_risk if isinstance(declared_risk, str) and declared_risk in _RISK_ORDER else "GREEN"
+            risks.append(risk)
+            operation_overrides = _mapping(override.get("operation_overrides"))
+            rules.append(_mapping(operation_overrides.get(operation_class)) or _mapping(base_rules.get(risk, base_rules.get("GREEN", {}))))
+        risk_mode = max(risks, key=lambda item: _RISK_ORDER.get(item, 2))
+        if not rules:
+            rules = [_mapping(base_rules.get("GREEN", {}))]
         # A condition-specific rule is authoritative over the base rule. Multiple
         # rules are merged conservatively: one failed gate denies the operation.
         all_checks: list[dict[str, Any]] = []
@@ -88,6 +89,25 @@ class PermissionEvaluator:
         if result == "DENY" and not blockers and codes:
             blockers = [code for code in codes if code.startswith("R_")]
         return self._decision(operation_class, result, risk_mode, codes, all_checks, request_id, decision_id, decided_at, facts, blockers=blockers, warnings=warnings, effect_scope=effect_scopes[0] if effect_scopes else None)
+
+    @staticmethod
+    def _is_idempotent_replay(context: Mapping[str, Any]) -> bool:
+        proposed = _mapping(context.get("proposed_claim"))
+        record = _mapping(context.get("idempotency_record"))
+        if not proposed or not record:
+            return False
+        key = proposed.get("idempotency_key", context.get("idempotency_key"))
+        proposed_lease = proposed.get("lease_revision", proposed.get("lease_or_expected_revision"))
+        record_lease = record.get("lease_revision", record.get("lease_or_expected_revision"))
+        if not all((key, proposed.get("claim_id"), proposed.get("claimant"), proposed_lease, proposed.get("payload_hash"), record.get("claim_id"), record.get("claimant"), record_lease, record.get("payload_hash"))):
+            return False
+        return (
+            record.get("idempotency_key") == key
+            and record.get("claim_id") == proposed.get("claim_id")
+            and record.get("claimant") == proposed.get("claimant")
+            and record_lease == proposed_lease
+            and record.get("payload_hash") == proposed.get("payload_hash")
+        )
 
     def _apply_rule(self, rule: Mapping[str, Any], context: Mapping[str, Any]) -> tuple[str, list[dict[str, Any]]]:
         if rule.get("mode") == "DIRECT":

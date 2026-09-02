@@ -21,8 +21,10 @@ def test_event_replay_and_conflict() -> None:
 
 def test_filesystem_adapters_are_root_bounded(tmp_path: Path) -> None:
     (tmp_path / "input.json").write_text('{"value": 1}', encoding="utf-8")
+    (tmp_path / "typed.yaml").write_text("when: 2026-01-01\n", encoding="utf-8")
     reader = FilesystemControlSourceReader(tmp_path)
     assert reader.read_source("input.json")["content"]["value"] == 1
+    assert reader.read_source("typed.yaml")["content"]["when"] == "2026-01-01"
     artifact = FilesystemArtifactReader(tmp_path)
     assert artifact.read_identity("input.json")["byte_size"] > 0
     with pytest.raises(ValueError):

@@ -18,4 +18,7 @@ def test_candidate_execution_binding_and_invalidation() -> None:
     assert not ExecutionCapsuleCompiler().validate(execution)
     assert is_capsule_invalidated(execution, {**state["sources"], "task_authority": {"revision": "2"}})
     assert is_capsule_invalidated(execution, state["sources"], {"claim_id": "claim", "claimant": "worker", "lease_revision": "1", "status": "EXPIRED"})
+    assert not is_capsule_invalidated(execution, state["sources"], {"claim_id": "claim", "claimant": "worker", "lease_revision": "1", "status": "ACTIVE"})
+    assert is_capsule_invalidated(execution, state["sources"], {"claim_id": "claim", "claimant": "worker", "lease_revision": "2", "status": "ACTIVE"})
+    assert is_capsule_invalidated(execution, state["sources"], None)
 

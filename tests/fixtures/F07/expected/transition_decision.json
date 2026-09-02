@@ -1,9 +1,2 @@
-{
-  "fixture_id": "F07",
-  "result": "DENY",
-  "risk_mode": "RED",
-  "observed_condition_codes": ["R_ARTIFACT_IDENTITY_MISMATCH"]
-}
-*** Add File: C:/Users/jiawe/.codex/visualizations/2026/09/01/01a05f09-bf29-7610-86ce-b79d2187b627/tests/fixtures/F07/inputs/observations.json
-{}
+{"fixture_id":"F07","result":"DENY","risk_mode":"RED","observed_condition_codes":["R_ARTIFACT_IDENTITY_MISMATCH"]}
 

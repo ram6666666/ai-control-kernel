@@ -1,2 +1,2 @@
-{}
+{"requested_repair_condition_code":"A_WORKER_DISABLED","observed_condition_codes":["A_WORKER_DISABLED"],"actor_role":"LIVENESS_OWNER","recovery_owner_class":"LIVENESS_OWNER","requested_mutations":{}}
 

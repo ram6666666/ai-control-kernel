@@ -1,9 +1,2 @@
-{
-  "fixture_id": "F09",
-  "result": "ALLOW",
-  "risk_mode": "AMBER",
-  "observed_condition_codes": ["A_STALE_DERIVED_VIEW"]
-}
-*** Add File: C:/Users/jiawe/.codex/visualizations/2026/09/01/01a05f09-bf29-7610-86ce-b79d2187b627/tests/fixtures/F09/inputs/observations.json
-{}
+{"fixture_id":"F09","result":"ALLOW","risk_mode":"AMBER","observed_condition_codes":["A_STALE_DERIVED_VIEW"]}
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from ai_control_kernel.conditions import ConditionDetector
 from ai_control_kernel.policy import PermissionEvaluator
 from ai_control_kernel.schema import load_yaml
+from fixture_runner import assert_fixture_must_not, canonical_golden_bytes, run_fixture
 
 
 def test_all_public_fixtures_exist_and_expected_are_stable() -> None:
@@ -22,4 +23,12 @@ def test_f01_f10_condition_and_policy_shapes(policy, predicate_registry) -> None
     assert amber["result"] == "ALLOW" and amber["risk_mode"] == "AMBER"
     assert red["result"] == "DENY" and red["risk_mode"] == "RED"
     assert ConditionDetector().detect("A_STALE_DERIVED_VIEW", {"authoritative_source_revisions": {"x": "2"}, "derived_view_source_revisions": {"x": "1"}})["observed"]
+
+
+def test_f01_to_f10_complete_pipeline_and_canonical_goldens(registry, predicate_registry) -> None:
+    root = Path(__file__).parent / "fixtures"
+    for fixture_id in ("F01", "F02", "F03A", "F03B", "F04", "F05", "F06", "F07", "F08", "F09", "F10"):
+        fixture, generated, expected, decision = run_fixture(root / fixture_id, registry, predicate_registry)
+        assert canonical_golden_bytes(generated) == canonical_golden_bytes(expected)
+        assert_fixture_must_not(fixture, generated, decision)
 

@@ -216,5 +216,5 @@ class PredicateRegistry:
     def _policy_reconciliation_scope(context: Mapping[str, Any]) -> bool:
         flags = context.get("semantic_change_flags", [])
         repair = _as_mapping(context.get("requested_policy_repair"))
-        return not any(bool(flag) for flag in _as_list(flags)) and repair.get("mechanically_decidable", True) is True
+        return not any(bool(flag) for flag in _as_list(flags)) and repair.get("mechanically_decidable") is True
 

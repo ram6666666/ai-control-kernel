@@ -7,7 +7,7 @@ input_revisions:
 requested_operation: PROMOTE_OR_ACCEPT_CANONICAL
 expected_result: DENY
 expected_risk_mode: RED
-expected_condition_codes: []
+expected_condition_codes: ["R_ARTIFACT_IDENTITY_MISMATCH"]
 expected_semantic_review: false
 must_not: ["promote_shadow_implicitly"]
 

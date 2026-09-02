@@ -37,6 +37,14 @@ def _value(source: object, key: str, default: Any = None) -> Any:
     return _map(source).get(key, default)
 
 
+def _action_value(item: object) -> str | None:
+    if isinstance(item, Mapping):
+        value = item.get("value", item.get("action", item.get("id")))
+    else:
+        value = item
+    return value if isinstance(value, str) else None
+
+
 class EffectiveStateResolver:
     """Resolve parent/project/task/package observations into a schema-shaped view."""
 
@@ -75,8 +83,6 @@ class EffectiveStateResolver:
             normalized = self.status_normalizer.normalize(raw_status, project_task_extension=_map(task.get("status_extension")), project_extension=_map(project.get("status_extension")))
         normalized = normalized or "UNKNOWN"
 
-        allowed = self._actions(global_policy, project, task, package, key="allowed_actions")
-        forbidden = self._actions(global_policy, project, task, package, key="forbidden_actions")
         local_restrictions = self._actions(project, task, package, {}, key="stricter_local_restrictions")
         dependencies = self._actions(project, task, package, {}, key="dependencies")
         gates = self._actions(project, task, package, {}, key="acceptance_gates")
@@ -84,9 +90,10 @@ class EffectiveStateResolver:
         conditions = [str(item) for item in _list(sources.get("observed_condition_codes", _map(sources.get("health")).get("observed_condition_codes")))]
         conflicts = bool(sources.get("authority_conflict", False)) or _value(project, "authority_resolution") == "CONFLICT"
         authority_resolution = str(sources.get("authority_resolution", "CONFLICT" if conflicts else "UNIQUE"))
-        if authority_resolution not in {"UNIQUE", "AMBIGUOUS", "CONFLICT"}:
-            authority_resolution = "UNIQUE"
-        semantic = any(code.startswith("S_") for code in conditions) or bool(sources.get("semantic_review_required", False))
+        invalid_authority_resolution = authority_resolution not in {"UNIQUE", "AMBIGUOUS", "CONFLICT"}
+        if invalid_authority_resolution:
+            authority_resolution = "AMBIGUOUS"
+        semantic = any(code.startswith("S_") for code in conditions) or bool(sources.get("semantic_review_required", False)) or invalid_authority_resolution
         amber = any(code.startswith("A_") for code in conditions)
         red = any(code.startswith("R_") for code in conditions)
         mechanical = "RED" if red else "AMBER" if amber else "GREEN"
@@ -104,6 +111,9 @@ class EffectiveStateResolver:
             "runtime_observations": runtime_refs,
         }
         provenance = {"policy.epoch": global_ref, "identity.project_id": project_ref or global_ref, "execution.normalized_status": package_ref or task_ref or project_ref or global_ref}
+        permission_layers = ((global_policy, global_ref), (project, project_ref), (task, task_ref), (package, package_ref))
+        allowed_records = self._actions_with_sources(*permission_layers, key="allowed_actions", intersect=True)
+        forbidden_records = self._actions_with_sources(*permission_layers, key="forbidden_actions")
         return {
             "schema_version": "ack.effective_state.v0.1",
             "resolved_at": now,
@@ -130,8 +140,8 @@ class EffectiveStateResolver:
                 "production_authorized": _pv(bool(_value(package, "production_authorized", _value(task, "production_authorized", False))), package_ref or task_ref or global_ref, "explicit_authorization_only"),
             },
             "constraints": {
-                "allowed_actions": [_pv(item, package_ref or task_ref or project_ref or global_ref, "narrowing_intersection") for item in allowed],
-                "forbidden_actions": [_pv(item, package_ref or task_ref or project_ref or global_ref, "narrowing_union") for item in forbidden],
+                "allowed_actions": [_pv(item, source, "narrowing_intersection") for item, source in allowed_records],
+                "forbidden_actions": [_pv(item, source, "narrowing_union") for item, source in forbidden_records],
                 "stricter_local_restrictions": [_pv(item, project_ref or task_ref or package_ref or global_ref, "local_restriction_survives_overlay") for item in local_restrictions],
                 "dependencies": [_pv(item, task_ref or project_ref or package_ref or global_ref, "declared_dependencies") for item in dependencies],
                 "acceptance_gates": [_pv(item, task_ref or project_ref or package_ref or global_ref, "declared_acceptance_gates") for item in gates],
@@ -152,14 +162,37 @@ class EffectiveStateResolver:
 
     @staticmethod
     def _actions(*layers: Mapping[str, Any], key: str) -> list[str]:
-        values: list[str] = []
-        for layer in layers:
-            for item in _list(layer.get(key)):
-                if isinstance(item, Mapping):
-                    value = item.get("value", item.get("action", item.get("id")))
-                else:
-                    value = item
-                if isinstance(value, str) and value not in values:
-                    values.append(value)
-        return values
+        return [value for value, _source in EffectiveStateResolver._actions_with_sources(*((layer, {}) for layer in layers), key=key)]
+
+    @staticmethod
+    def _actions_with_sources(*layers: tuple[Mapping[str, Any], Mapping[str, Any] | None], key: str, intersect: bool = False) -> list[tuple[str, Mapping[str, Any]]]:
+        declared: list[tuple[list[str], Mapping[str, Any] | None]] = []
+        for layer, source in layers:
+            if key not in layer:
+                continue
+            values = [value for value in (_action_value(item) for item in _list(layer.get(key))) if value is not None]
+            declared.append((list(dict.fromkeys(values)), source))
+        if not declared:
+            return []
+        if intersect:
+            surviving = set(declared[0][0])
+            for values, _source in declared[1:]:
+                surviving.intersection_update(values)
+            ordered = [value for value in declared[0][0] if value in surviving]
+        else:
+            ordered = []
+            for values, _source in declared:
+                for value in values:
+                    if value not in ordered:
+                        ordered.append(value)
+        result: list[tuple[str, Mapping[str, Any]]] = []
+        for value in ordered:
+            source: Mapping[str, Any] | None = None
+            for values, candidate_source in reversed(declared):
+                if value in values and candidate_source is not None:
+                    source = candidate_source
+                    break
+            if source is not None:
+                result.append((value, source))
+        return result
 

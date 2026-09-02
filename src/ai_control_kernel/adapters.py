@@ -10,6 +10,7 @@ from typing import Any, BinaryIO, Mapping, Sequence
 import yaml  # type: ignore[import-untyped]
 
 from .canonical import canonical_json_bytes, sha256_stream
+from .schema import _json_compatible
 
 
 def _safe_path(root: Path, locator: str) -> Path:
@@ -33,7 +34,7 @@ class FilesystemControlSourceReader:
         raw = path.read_bytes()
         source_type = "OTHER"
         if path.suffix.lower() in {".yaml", ".yml"}:
-            content = yaml.safe_load(raw.decode("utf-8"))
+            content = _json_compatible(yaml.safe_load(raw.decode("utf-8")))
         elif path.suffix.lower() == ".json":
             content = json.loads(raw.decode("utf-8"))
         else:

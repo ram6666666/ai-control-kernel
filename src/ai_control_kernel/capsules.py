@@ -144,7 +144,17 @@ def is_capsule_invalidated(capsule: Mapping[str, Any], current_source_revisions:
         return False
     concurrency = _map(capsule.get("concurrency"))
     claim = current_claim or {}
+    if not claim:
+        return True
     if claim.get("status") in {"RELEASED", "EXPIRED", "REASSIGNED", "CONFLICT"}:
         return True
-    return any(concurrency.get(field) != claim.get(field) for field in ("claim_id", "claimant", "lease_or_expected_revision") if field in claim)
+    normalized_claim = {
+        "claim_id": claim.get("claim_id"),
+        "claimant": claim.get("claimant"),
+        "lease_or_expected_revision": claim.get("lease_revision", claim.get("lease_or_expected_revision")),
+    }
+    required = ("claim_id", "claimant", "lease_or_expected_revision")
+    if any(not normalized_claim[field] or not concurrency.get(field) for field in required):
+        return True
+    return any(concurrency[field] != normalized_claim[field] for field in required)
 

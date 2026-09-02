@@ -131,7 +131,7 @@ def test_capsule_and_effective_state_alternatives() -> None:
     resolver = EffectiveStateResolver()
     assert resolver._actions({"x": 1, "allowed_actions": [{"action": "A"}, {"id": "B"}, 1, "A"]}, key="allowed_actions") == ["A", "B"]
     resolved = resolver.resolve({"global_policy": {}, "package_authority": {"normalized_status": "READY"}, "authority_resolution": "INVALID"}, resolved_at="2026-01-01T00:00:00Z")
-    assert resolved["health"]["authority_resolution"] == "UNIQUE"
+    assert resolved["health"]["authority_resolution"] == "AMBIGUOUS"
 
 
 def test_condition_event_policy_and_state_alternatives(policy, predicate_registry, state_machine) -> None:
@@ -183,7 +183,8 @@ def test_predicate_dispatch_and_alternate_inputs(predicate_registry: PredicateRe
     assert not predicate_registry._promotion_amber_irrelevant({"observed_amber_conditions": ["A"], "promotion_gate_relevance_map": {"A": ["facet"]}, "required_promotion_facets": ["facet"]})
     assert predicate_registry._recovery_role({"actor_role": "A", "recovery_owner_class": "A"})
     assert predicate_registry._recovery_role({"actor_role": "A", "recovery_owner_class": "O", "delegations": [{"actor_role": "A", "owner_class": "O", "valid": True}]})
-    assert predicate_registry._policy_reconciliation_scope({"semantic_change_flags": [], "requested_policy_repair": {}})
+    assert not predicate_registry._policy_reconciliation_scope({"semantic_change_flags": [], "requested_policy_repair": {}})
+    assert predicate_registry._policy_reconciliation_scope({"semantic_change_flags": [], "requested_policy_repair": {"mechanically_decidable": True}})
     assert not predicate_registry._policy_reconciliation_scope({"semantic_change_flags": [True], "requested_policy_repair": {}})
 
 

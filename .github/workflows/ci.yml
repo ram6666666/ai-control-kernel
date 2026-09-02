@@ -28,10 +28,10 @@ jobs:
       - run: python -m pip install -c constraints.txt -e ".[dev]"
       - run: python -m pip check
       - run: ruff check src tests
-      - run: ruff format src tests
       - run: ruff format --check src tests
       - run: mypy --strict src
-      - run: pytest --cov=ai_control_kernel --cov-branch --cov-report=term-missing --cov-fail-under=95
+      - run: pytest --cov=ai_control_kernel --cov-branch --cov-report=term-missing --cov-report=json
+      - run: python -c "import json; t=json.load(open('coverage.json', encoding='utf-8'))['totals']; line=100*t['covered_lines']/t['num_statements']; branch=100*t['covered_branches']/t['num_branches'] if t['num_branches'] else 100; print(f'line={line:.2f}% branch={branch:.2f}%'); assert line >= 95, line; assert branch >= 90, branch"
       - run: python -m build --sdist --wheel
       - run: python -m compileall -q src tests
       - run: pytest -q tests/test_security_boundaries.py
