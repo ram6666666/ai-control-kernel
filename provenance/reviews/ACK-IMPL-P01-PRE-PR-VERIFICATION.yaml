@@ -1,0 +1,28 @@
+schema_version: 0.1
+review_id: ACK-IMPL-P01-PRE-PR-VERIFICATION
+reviewed_at_utc: 2026-09-02T13:49:34Z
+package_id: ACK-IMPL-P01
+repository: ram6666666/ai-control-kernel
+base_commit: 07ca5a4b994ee3230584018018829321824bb483
+head_commit: e4cf4f0dfb2c16e6eeeda8f21c94ddb4ce526ef6
+head_branch: impl/ack-impl-p01
+verdict: READY_FOR_IMPLEMENTATION_PR
+
+verified:
+  branch_head_matches_reported_commit: true
+  branch_ahead_by_commits: 11
+  branch_behind_by_commits: 0
+  frozen_design_spec_schema_package_paths_changed: false
+  production_integration_or_state_write_files_observed: false
+  implementation_changes_within_p01_scope: true
+  implementation_pr_currently_absent: true
+
+limitations:
+  codex_local_test_report_independently_reproduced_by_github_ci: false
+  reason: implementation PR did not yet exist, so no PR-triggered clean-checkout workflow run was available
+
+required_next_gate:
+  - create implementation PR from impl/ack-impl-p01 to main
+  - run GitHub CI from clean checkout
+  - perform independent code/spec-conformance review
+  - do not merge until ACK_IMPL_P01_ACCEPTED gates pass
