@@ -1,0 +1,14 @@
+fixture_id: F04
+incident_class: SCHEDULER_WAKE_NO_RECEIPT
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: LIVENESS_REPAIR
+expected_result: ALLOW
+expected_risk_mode: AMBER
+expected_condition_codes: ["A_SCHEDULER_DEGRADED_NO_SIDE_EFFECT"]
+expected_semantic_review: false
+must_not: ["infer_running_from_launch"]
+
+

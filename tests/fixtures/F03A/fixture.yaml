@@ -1,0 +1,14 @@
+fixture_id: F03A
+incident_class: DUPLICATE_CLAIM_EXACT_REPLAY
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: CLAIM_EXECUTION_UNIT
+expected_result: NOOP_IDEMPOTENT
+expected_risk_mode: GREEN
+expected_condition_codes: []
+expected_semantic_review: false
+must_not: ["create_second_active_claim"]
+
+

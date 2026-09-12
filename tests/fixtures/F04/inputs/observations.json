@@ -1,0 +1,2 @@
+{"scheduler_attempt_observed":true,"start_receipts":[],"claims":[],"task_events":[],"checkpoints":[],"artifacts":[],"requested_repair_condition_code":"A_SCHEDULER_DEGRADED_NO_SIDE_EFFECT","observed_condition_codes":["A_SCHEDULER_DEGRADED_NO_SIDE_EFFECT"],"actor_role":"LIVENESS_OWNER","recovery_owner_class":"LIVENESS_OWNER","requested_mutations":{}}
+

@@ -1,0 +1,13 @@
+fixture_id: F09
+incident_class: EVENT_REPLAY_SNAPSHOT_DIVERGENCE
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: SHADOW_VALIDATE
+expected_result: ALLOW
+expected_risk_mode: AMBER
+expected_condition_codes: ["A_STALE_DERIVED_VIEW"]
+expected_semantic_review: false
+must_not: ["treat_snapshot_as_peer_authority"]
+

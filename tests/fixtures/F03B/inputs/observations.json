@@ -1,0 +1,2 @@
+{"proposed_claim":{"execution_unit_id":"unit-1","claim_id":"claim-1","claimant":"worker-1","lease_revision":"rev-1","idempotency_key":"idem-1","payload_hash":"hash-1"},"idempotency_record":{},"active_claims":[{"execution_unit_id":"unit-1","claim_id":"claim-2","claimant":"worker-2","lease_revision":"rev-1"}],"incompatible_active_claim_exists":true}
+

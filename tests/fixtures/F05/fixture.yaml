@@ -1,0 +1,14 @@
+fixture_id: F05
+incident_class: WORKER_DISABLED_RECOVERABLE
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: LIVENESS_REPAIR
+expected_result: ALLOW
+expected_risk_mode: GREEN
+expected_condition_codes: []
+expected_semantic_review: false
+must_not: ["advance_content_state"]
+
+

@@ -1,0 +1,14 @@
+fixture_id: F06
+incident_class: INDEPENDENT_AUDIT_INPUT_UNAVAILABLE
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: ISSUE_INDEPENDENT_AUDIT_VERDICT
+expected_result: DENY
+expected_risk_mode: RED
+expected_condition_codes: ["R_REQUIRED_ARTIFACT_UNAVAILABLE"]
+expected_semantic_review: false
+must_not: ["accept_reconstructed_substitute"]
+
+

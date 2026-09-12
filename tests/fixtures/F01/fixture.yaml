@@ -1,0 +1,14 @@
+fixture_id: F01
+incident_class: STALE_COPIED_POLICY_METADATA
+sanitization: PUBLIC_SAFE_STRUCTURAL_REPRODUCTION
+input_revisions:
+  policy: policy-v0.1
+  task: task-rev-1
+requested_operation: READ_DIAGNOSE
+expected_result: ALLOW
+expected_risk_mode: AMBER
+expected_condition_codes: ["A_STALE_COPIED_METADATA"]
+expected_semantic_review: false
+must_not: ["mutate_stale_document"]
+
+
