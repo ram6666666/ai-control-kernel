@@ -25,6 +25,16 @@ def test_permission_layers_intersect_and_retain_item_provenance() -> None:
     assert allowed[0]["source"]["locator"] == "task"
 
 
+def test_local_prohibition_is_removed_from_effective_allowed_actions() -> None:
+    sources = {
+        "global_policy": {"allowed_actions": ["READ_DIAGNOSE", "MUTATE_CONTROL_STATE"], "source_ref": {"source_type": "POLICY", "locator": "global", "authority_class": "CANONICAL"}},
+        "project_state": {"allowed_actions": ["READ_DIAGNOSE", "MUTATE_CONTROL_STATE"], "forbidden_actions": ["MUTATE_CONTROL_STATE"], "source_ref": {"source_type": "PROJECT_STATE", "locator": "project", "authority_class": "NARROWING_AUTHORITY"}},
+    }
+    state = EffectiveStateResolver().resolve(sources, resolved_at="2026-01-01T00:00:00Z")
+    assert [item["value"] for item in state["constraints"]["allowed_actions"]] == ["READ_DIAGNOSE"]
+    assert [item["value"] for item in state["constraints"]["forbidden_actions"]] == ["MUTATE_CONTROL_STATE"]
+
+
 def test_invalid_authority_resolution_is_ambiguous() -> None:
     state = EffectiveStateResolver().resolve({"global_policy": {}, "authority_resolution": "NOT_A_STATE"}, resolved_at="2026-01-01T00:00:00Z")
     assert state["health"]["authority_resolution"] == "AMBIGUOUS"

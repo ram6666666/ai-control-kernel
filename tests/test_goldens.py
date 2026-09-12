@@ -28,6 +28,9 @@ def test_f01_f10_condition_and_policy_shapes(policy, predicate_registry) -> None
 def test_f01_to_f10_complete_pipeline_and_canonical_goldens(registry, predicate_registry) -> None:
     root = Path(__file__).parent / "fixtures"
     for fixture_id in ("F01", "F02", "F03A", "F03B", "F04", "F05", "F06", "F07", "F08", "F09", "F10"):
-        fixture, generated, expected, decision = run_fixture(root / fixture_id, registry, predicate_registry)
+        fixture, generated, expected, decision, subsystem_outputs = run_fixture(root / fixture_id, registry, predicate_registry)
         assert canonical_golden_bytes(generated) == canonical_golden_bytes(expected)
-        assert_fixture_must_not(fixture, generated, decision)
+        for output_name, output in subsystem_outputs.items():
+            expected_output = load_yaml(root / fixture_id / "expected" / f"{output_name}.json")
+            assert canonical_golden_bytes(output) == canonical_golden_bytes(expected_output)
+        assert_fixture_must_not(fixture, generated, decision, subsystem_outputs)

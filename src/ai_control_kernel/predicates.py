@@ -154,14 +154,36 @@ class PredicateRegistry:
         proposed = _as_mapping(context.get("proposed_claim"))
         key = proposed.get("idempotency_key", context.get("idempotency_key"))
         claim_id = proposed.get("claim_id")
+        claimant = proposed.get("claimant")
+        proposed_lease = proposed.get("lease_revision", proposed.get("lease_or_expected_revision"))
+        payload_hash = proposed.get("payload_hash")
         record = _as_mapping(context.get("idempotency_record"))
         if record and (not key or record.get("idempotency_key") == key):
-            return bool(key) and isinstance(proposed.get("payload_hash"), str) and bool(proposed.get("payload_hash")) and record.get("claim_id") == claim_id and record.get("payload_hash") == proposed.get("payload_hash")
+            record_lease = record.get("lease_revision", record.get("lease_or_expected_revision"))
+            verified_identity = (
+                key,
+                claim_id,
+                claimant,
+                proposed_lease,
+                payload_hash,
+                record.get("idempotency_key"),
+                record.get("claim_id"),
+                record.get("claimant"),
+                record_lease,
+                record.get("payload_hash"),
+            )
+            if not all(isinstance(value, str) and bool(value) for value in verified_identity):
+                return False
+            return bool(record.get("idempotency_key") == key and record.get("claim_id") == claim_id and record.get("claimant") == claimant and record_lease == proposed_lease and record.get("payload_hash") == payload_hash)
         for claim in _as_list(context.get("active_claims")):
             item = _as_mapping(claim)
             if item.get("execution_unit_id") != proposed.get("execution_unit_id"):
                 continue
-            same = item.get("claim_id") == claim_id and item.get("claimant") == proposed.get("claimant") and item.get("lease_revision") == proposed.get("lease_revision")
+            item_lease = item.get("lease_revision", item.get("lease_or_expected_revision"))
+            active_identity = (claim_id, claimant, proposed_lease, item.get("claim_id"), item.get("claimant"), item_lease)
+            if not all(isinstance(value, str) and bool(value) for value in active_identity):
+                return False
+            same = item.get("claim_id") == claim_id and item.get("claimant") == claimant and item_lease == proposed_lease
             if not same:
                 return False
         return True

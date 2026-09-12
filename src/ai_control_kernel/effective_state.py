@@ -114,6 +114,9 @@ class EffectiveStateResolver:
         permission_layers = ((global_policy, global_ref), (project, project_ref), (task, task_ref), (package, package_ref))
         allowed_records = self._actions_with_sources(*permission_layers, key="allowed_actions", intersect=True)
         forbidden_records = self._actions_with_sources(*permission_layers, key="forbidden_actions")
+        prohibited_actions = {value for value, _source_ref in forbidden_records}
+        prohibited_actions.update(local_restrictions)
+        allowed_records = [(value, source_ref) for value, source_ref in allowed_records if value not in prohibited_actions]
         return {
             "schema_version": "ack.effective_state.v0.1",
             "resolved_at": now,

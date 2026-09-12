@@ -123,10 +123,11 @@ def test_capsule_and_effective_state_alternatives() -> None:
     }
     decision = {"operation_class": "EXECUTE_AND_CHECKPOINT", "result": "ALLOW", "risk_mode": "GREEN"}
     candidate = CandidateCapsuleCompiler().compile(state, decision, context={})
-    claim = {"claim_id": "c", "claimant": "a", "lease_revision": "1"}
+    claim = {"claim_id": "c", "claimant": "a", "lease_revision": "1", "idempotency_key": "k", "source_ref": {"source_type": "CLAIM", "locator": "claim-c", "authority_class": "AUTHORITATIVE_CURRENT"}}
     with pytest.raises(ValueError):
         ExecutionCapsuleCompiler().compile(candidate, claim, {})
-    execution = ExecutionCapsuleCompiler().compile(candidate, claim, {"operation_class": "CLAIM_EXECUTION_UNIT", "result": "ALLOW"})
+    claim_decision = {"operation_class": "CLAIM_EXECUTION_UNIT", "result": "ALLOW", "decision_id": "claim-decision-c", "decision_source": {"source_type": "OTHER", "locator": "claim-decision-c", "authority_class": "DERIVED"}}
+    execution = ExecutionCapsuleCompiler().compile(candidate, claim, claim_decision)
     assert is_capsule_invalidated(execution, candidate["source_revisions"], {"claim_id": "different", "claimant": "a", "lease_or_expected_revision": "1"})
     resolver = EffectiveStateResolver()
     assert resolver._actions({"x": 1, "allowed_actions": [{"action": "A"}, {"id": "B"}, 1, "A"]}, key="allowed_actions") == ["A", "B"]
@@ -164,7 +165,10 @@ def test_predicate_dispatch_and_alternate_inputs(predicate_registry: PredicateRe
     assert predicate_registry._required_gates({"operation_gate_spec": {"gates": ["g"]}, "available_evidence": ["g"]})
     assert not predicate_registry._required_gates({"operation_gate_spec": "bad", "available_evidence": {}})
     proposed = {"execution_unit_id": "u", "claim_id": "c", "claimant": "a", "lease_revision": "1", "idempotency_key": "k", "payload_hash": "h"}
-    assert predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "idempotency_record": {"idempotency_key": "k", "claim_id": "c", "payload_hash": "h"}})
+    incomplete_record = {"idempotency_key": "k", "claim_id": "c", "payload_hash": "h"}
+    assert not predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "idempotency_record": incomplete_record})
+    complete_record = {**incomplete_record, "claimant": "a", "lease_revision": "1"}
+    assert predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "idempotency_record": complete_record})
     assert not predicate_registry._claim_conflict_absent({"proposed_claim": {key: value for key, value in proposed.items() if key != "payload_hash"}, "idempotency_record": {"idempotency_key": "k", "claim_id": "c", "payload_hash": "h"}})
     assert not predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "idempotency_record": {"idempotency_key": "k", "claim_id": "other", "payload_hash": "h"}})
     assert predicate_registry._claim_conflict_absent({"proposed_claim": proposed, "active_claims": [{"execution_unit_id": "other"}]})

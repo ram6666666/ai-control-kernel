@@ -7,7 +7,7 @@ input_revisions:
 requested_operation: MUTATE_CONTROL_STATE
 expected_result: DENY
 expected_risk_mode: RED
-expected_condition_codes: ["R_ROLE_WRITE_VIOLATION"]
+expected_condition_codes: ["R_MISSING_AUTHORIZATION"]
 expected_semantic_review: false
 must_not: ["union_global_permissions"]
 

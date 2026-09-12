@@ -55,6 +55,12 @@ def test_idempotent_claim_and_mixed_risk_merge(policy, predicate_registry) -> No
     conflict = dict(replay)
     conflict["idempotency_record"] = {**replay["idempotency_record"], "claim_id": "other"}
     assert evaluator.evaluate("CLAIM_EXECUTION_UNIT", context=conflict)["result"] == "DENY"
+    claimant_conflict = dict(replay)
+    claimant_conflict["proposed_claim"] = {**replay["proposed_claim"], "claimant": "other-worker"}
+    assert evaluator.evaluate("CLAIM_EXECUTION_UNIT", context=claimant_conflict)["result"] == "DENY"
+    lease_conflict = dict(replay)
+    lease_conflict["proposed_claim"] = {**replay["proposed_claim"], "lease_revision": "2"}
+    assert evaluator.evaluate("CLAIM_EXECUTION_UNIT", context=lease_conflict)["result"] == "DENY"
     missing_payload = dict(replay)
     missing_payload["proposed_claim"] = {key: value for key, value in replay["proposed_claim"].items() if key != "payload_hash"}
     assert evaluator.evaluate("CLAIM_EXECUTION_UNIT", context=missing_payload)["result"] == "DENY"

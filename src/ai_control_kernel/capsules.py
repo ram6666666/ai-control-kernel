@@ -28,6 +28,27 @@ def _source(value: object, fallback: str) -> dict[str, Any]:
     }
 
 
+def _required_text(value: object, field: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"missing or invalid {field}")
+    return value
+
+
+def _required_source(value: object, field: str) -> dict[str, Any]:
+    source = _map(value)
+    source_type = _required_text(source.get("source_type"), f"{field}.source_type")
+    locator = _required_text(source.get("locator"), f"{field}.locator")
+    authority_class = _required_text(source.get("authority_class"), f"{field}.authority_class")
+    return {
+        "source_type": source_type,
+        "locator": locator,
+        "revision": source.get("revision"),
+        "content_hash": source.get("content_hash"),
+        "observed_at": source.get("observed_at"),
+        "authority_class": authority_class,
+    }
+
+
 def _source_revisions(state: Mapping[str, Any], context: Mapping[str, Any]) -> dict[str, Any]:
     current = _map(context.get("source_revisions", _map(state.get("sources"))))
     keys = ("policy_fingerprint", "permission_policy", "state_machine", "status_normalization", "project_registry", "project_state", "task_authority", "package_authority", "latest_checkpoint")
@@ -117,10 +138,22 @@ class ExecutionCapsuleCompiler:
             raise ValueError("invalid candidate capsule: " + "; ".join(errors))
         if claim_decision.get("operation_class") != "CLAIM_EXECUTION_UNIT" or claim_decision.get("result") != "ALLOW":
             raise ValueError("ExecutionCapsule requires an ALLOW CLAIM_EXECUTION_UNIT decision")
-        claim_source = _source(claim.get("source_ref"), "claim")
+        claim_id = _required_text(claim.get("claim_id"), "claim.claim_id")
+        claimant = _required_text(claim.get("claimant"), "claim.claimant")
+        lease_revision = _required_text(claim.get("lease_revision", claim.get("lease_or_expected_revision")), "claim.lease_revision")
+        execution_idempotency_key = _required_text(idempotency_key if idempotency_key is not None else claim.get("idempotency_key"), "claim.idempotency_key")
+        claim_source = _required_source(claim.get("source_ref"), "claim.source_ref")
+        claim_verification_decision_id = _required_text(claim_decision.get("decision_id"), "claim_decision.decision_id")
+        claim_decision_source = _required_source(claim_decision.get("decision_source"), "claim_decision.decision_source")
+        claim_decision_identity = dict(claim_decision_source)
+        claim_decision_identity["locator"] = claim_verification_decision_id
         result = dict(candidate)
-        result.update({"schema_version": "ack.execution_capsule.v0.1", "capsule_type": "EXECUTION", "capsule_id": capsule_id, "candidate_capsule_id": str(candidate.get("capsule_id")), "candidate_payload_hash": sha256_bytes(canonical_json_bytes(candidate)), "compiled_at": normalize_timestamp(compiled_at or datetime.now(timezone.utc)), "concurrency": {"claim_id": str(claim.get("claim_id")), "claimant": str(claim.get("claimant")), "lease_or_expected_revision": str(claim.get("lease_revision")), "idempotency_key": str(idempotency_key or claim.get("idempotency_key", "execution-key")), "claim_source": claim_source}})
-        result["provenance_trace"] = dict(_map(candidate.get("provenance_trace"))) | {"claim": claim_source, "claim_verification_decision": _source(claim_decision.get("decision_source"), "claim-decision")}
+        result.update({"schema_version": "ack.execution_capsule.v0.1", "capsule_type": "EXECUTION", "capsule_id": capsule_id, "candidate_capsule_id": str(candidate.get("capsule_id")), "candidate_payload_hash": sha256_bytes(canonical_json_bytes(candidate)), "compiled_at": normalize_timestamp(compiled_at or datetime.now(timezone.utc)), "concurrency": {"claim_id": claim_id, "claimant": claimant, "lease_or_expected_revision": lease_revision, "idempotency_key": execution_idempotency_key, "claim_source": claim_source}})
+        result["provenance_trace"] = dict(_map(candidate.get("provenance_trace"))) | {
+            "claim": claim_source,
+            "claim_verification_decision": claim_decision_source,
+            "claim_verification_decision_id": claim_decision_identity,
+        }
         return result
 
     def validate(self, capsule: Mapping[str, Any]) -> list[str]:
@@ -133,6 +166,11 @@ class ExecutionCapsuleCompiler:
         for field in ("claim_id", "claimant", "lease_or_expected_revision", "idempotency_key", "claim_source"):
             if not concurrency.get(field):
                 errors.append(f"missing execution claim field: {field}")
+        provenance = _map(capsule.get("provenance_trace"))
+        if not provenance.get("claim_verification_decision"):
+            errors.append("missing claim verification decision source")
+        if not provenance.get("claim_verification_decision_id"):
+            errors.append("missing claim verification decision identity")
         return errors
 
 
